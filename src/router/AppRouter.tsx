@@ -1,16 +1,8 @@
-<<<<<<< HEAD
 import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
   Outlet
-=======
-import { 
-  createBrowserRouter, 
-  RouterProvider, 
-  Navigate, 
-  Outlet 
->>>>>>> 4fa4353 (add auth layout)
 } from 'react-router-dom';
 import ProtectedRoute from '@/components/guards/ProtectedRoute';
 import { RoleRedirect } from '@/components/guards/RoleRedirect';
