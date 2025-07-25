@@ -1,9 +1,12 @@
-import { Outlet } from "react-router-dom"
+import type { LayoutProps } from "@/types/user.types";
 
-export const MainLayout = () => {
+export const MainLayout: React.FC<LayoutProps> = ({
+    children
+}) => {
     return (
         <>
-            <Outlet />
+            <h1>Navbar</h1>
+            {children}
         </>
     )
 };
