@@ -1,34 +1,24 @@
-import React from 'react';
 import { 
   createBrowserRouter, 
   RouterProvider, 
   Navigate, 
   Outlet 
 } from 'react-router-dom';
-import { ProtectedRoute } from '@/components/guards/ProtectedRoute';
+import ProtectedRoute from '@/components/guards/ProtectedRoute';
 import { RoleRedirect } from '@/components/guards/RoleRedirect';
 import { MainLayout } from '@/components/layout/MainLayout';
 
-// // Auth components
-// import { LoginForm } from '@/components/auth/LoginForm';
-// import { ForgotPassword } from '@/components/auth/ForgotPassword';
-
-// // Admin pages
-// import { AdminDashboard } from '@/components/pages/admin/AdminDashboard';
-// import { UserManagement } from '@/components/pages/admin/UserManagement';
-// import { SystemSettings } from '@/components/pages/admin/SystemSettings';
-
-// // User pages
-// import { UserDashboard } from '@/components/pages/user/UserDashboard';
-// import { UserProfile } from '@/components/pages/user/UserProfile';
-// import { UserSettings } from '@/components/pages/user/UserSettings';
-
 // Shared pages
-import { NotFound } from '@/components/shared/NotFound';
-import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback'
+import NotFound from '@/components/shared/NotFound';
+import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback';
+
+// Auth pages
+import LoginForm from '@/components/auth/LoginForm';
+import AuthLayout from '@/components/layout/AuthLayout';
+import RegisterForm from '@/components/auth/RegisterForm';
 
 // Layout wrappers for different roles
-const AdminLayout: React.FC = () => (
+const AdminLayout = () => (
   <ProtectedRoute adminOnly fallback={<UnauthorizedFallback />}>
     <MainLayout>
       <Outlet />
@@ -36,7 +26,7 @@ const AdminLayout: React.FC = () => (
   </ProtectedRoute>
 );
 
-const UserLayout: React.FC = () => (
+const UserLayout = () => (
   <ProtectedRoute requiredRole="USER" fallback={<UnauthorizedFallback />}>
     <MainLayout>
       <Outlet />
@@ -44,7 +34,7 @@ const UserLayout: React.FC = () => (
   </ProtectedRoute>
 );
 
-const AnyUserLayout: React.FC = () => (
+const AnyUserLayout = () => (
   <ProtectedRoute>
     <MainLayout>
       <Outlet />
@@ -54,14 +44,21 @@ const AnyUserLayout: React.FC = () => (
 
 const router = createBrowserRouter([
   // Public routes
-  // {
-  //   path: '/login',
-  //   element: <LoginForm />,
-  // },
-  // {
-  //   path: '/forgot-password',
-  //   element: <ForgotPassword />,
-  // },
+  {
+    path: '/',
+    element: <AuthLayout />,
+    children: [
+      {
+        index: true,
+        path: 'login',
+        element: <LoginForm />
+      },
+      {
+        path: 'signup',
+        element: <RegisterForm />
+      }
+    ]
+  },
   
   // Protected routes with role-based redirection
   {
@@ -140,7 +137,7 @@ const router = createBrowserRouter([
   // Error routes
   {
     path: '/unauthorized',
-    // element: <Unauthorized />,
+    element: <UnauthorizedFallback />,
   },
   {
     path: '*',
@@ -148,6 +145,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-export const AppRouter: React.FC = () => {
+export const AppRouter = () => {
   return <RouterProvider router={router} />;
 };
