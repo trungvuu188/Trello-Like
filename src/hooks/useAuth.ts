@@ -63,7 +63,9 @@ export const useAuth = () => {
     // State
     user: authState.user,
     userRole: authState.userRole,
+    // userRole: 'USER',
     isAuthenticated: authState.isAuthenticated,
+    // isAuthenticated: true,
     isLoading: authState.isLoading,
     error: authState.error,
     isInitialized: authState.isInitialized,

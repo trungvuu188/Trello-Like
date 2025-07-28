@@ -1,8 +1,8 @@
-import { 
-  createBrowserRouter, 
-  RouterProvider, 
-  Navigate, 
-  Outlet 
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet
 } from 'react-router-dom';
 import ProtectedRoute from '@/components/guards/ProtectedRoute';
 import { RoleRedirect } from '@/components/guards/RoleRedirect';
@@ -16,6 +16,7 @@ import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback';
 import LoginForm from '@/components/auth/LoginForm';
 import AuthLayout from '@/components/layout/AuthLayout';
 import RegisterForm from '@/components/auth/RegisterForm';
+import UserDashboard from '@/pages/UserDashboard';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -34,14 +35,6 @@ const UserLayout = () => (
   </ProtectedRoute>
 );
 
-const AnyUserLayout = () => (
-  <ProtectedRoute>
-    <MainLayout>
-      <Outlet />
-    </MainLayout>
-  </ProtectedRoute>
-);
-
 const router = createBrowserRouter([
   // Public routes
   {
@@ -50,6 +43,9 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <Navigate to={'/login'} replace />
+      },
+      {
         path: 'login',
         element: <LoginForm />
       },
@@ -59,7 +55,7 @@ const router = createBrowserRouter([
       }
     ]
   },
-  
+
   // Protected routes with role-based redirection
   {
     path: '/',
@@ -103,14 +99,14 @@ const router = createBrowserRouter([
     path: '/user',
     element: <UserLayout />,
     children: [
-      {
-        index: true, // /user
-        element: <Navigate to="/user/dashboard" replace />,
-      },
       // {
-      //   path: 'dashboard', // /user/dashboard
-      //   element: <UserDashboard />,
+      //   index: true, 
+      //   element: <Navigate to="/user/dashboard" replace />,
       // },
+      {
+        path: 'dashboard',
+        element: <UserDashboard />,
+      },
       // {
       //   path: 'profile', // /user/profile
       //   element: <UserProfile />,
@@ -118,18 +114,6 @@ const router = createBrowserRouter([
       // {
       //   path: 'settings', // /user/settings
       //   element: <UserSettings />,
-      // },
-    ],
-  },
-
-  // Shared routes - accessible by any authenticated user
-  {
-    path: '/app',
-    element: <AnyUserLayout />,
-    children: [
-      // {
-      //   path: 'profile', // /app/profile (accessible by all)
-      //   element: <UserProfile />,
       // },
     ],
   },
