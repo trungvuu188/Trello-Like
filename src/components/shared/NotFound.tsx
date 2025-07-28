@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -20,9 +20,6 @@ const NotFound = () => {
           >
             Go Back
           </button>
-          <Link to="/dashboard" className="btn-primary">
-            Go to Dashboard
-          </Link>
         </div>
       </div>
     </div>

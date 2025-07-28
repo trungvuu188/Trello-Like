@@ -1,12 +1,15 @@
 import type { LayoutProps } from "@/types/user.types";
+import Navbar from "./Navbar";
 
 export const MainLayout: React.FC<LayoutProps> = ({
     children
 }) => {
     return (
-        <>
-            <h1>Navbar</h1>
-            {children}
-        </>
+        <div className="h-screen flex flex-col">
+            <Navbar />
+            <div className="flex-1 overflow-hidden">
+                {children}
+            </div>
+        </div>
     )
 };
