@@ -25,7 +25,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 
 // Shared pages
 import { NotFound } from '@/components/shared/NotFound';
-import { UnauthorizedFallback } from '@/components/shared/UnauthorizedFallback';
+import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback'
 
 // Layout wrappers for different roles
 const AdminLayout: React.FC = () => (
@@ -54,14 +54,14 @@ const AnyUserLayout: React.FC = () => (
 
 const router = createBrowserRouter([
   // Public routes
-  {
-    path: '/login',
-    element: <LoginForm />,
-  },
-  {
-    path: '/forgot-password',
-    element: <ForgotPassword />,
-  },
+  // {
+  //   path: '/login',
+  //   element: <LoginForm />,
+  // },
+  // {
+  //   path: '/forgot-password',
+  //   element: <ForgotPassword />,
+  // },
   
   // Protected routes with role-based redirection
   {
@@ -82,22 +82,22 @@ const router = createBrowserRouter([
         index: true, // /admin
         element: <Navigate to="/admin/dashboard" replace />,
       },
-      {
-        path: 'dashboard', // /admin/dashboard
-        element: <AdminDashboard />,
-      },
-      {
-        path: 'users', // /admin/users
-        element: <UserManagement />,
-      },
-      {
-        path: 'users/:id', // /admin/users/123
-        element: <UserManagement />,
-      },
-      {
-        path: 'settings', // /admin/settings
-        element: <SystemSettings />,
-      },
+      // {
+      //   path: 'dashboard', // /admin/dashboard
+      //   element: <AdminDashboard />,
+      // },
+      // {
+      //   path: 'users', // /admin/users
+      //   element: <UserManagement />,
+      // },
+      // {
+      //   path: 'users/:id', // /admin/users/123
+      //   element: <UserManagement />,
+      // },
+      // {
+      //   path: 'settings', // /admin/settings
+      //   element: <SystemSettings />,
+      // },
     ],
   },
 
@@ -110,18 +110,18 @@ const router = createBrowserRouter([
         index: true, // /user
         element: <Navigate to="/user/dashboard" replace />,
       },
-      {
-        path: 'dashboard', // /user/dashboard
-        element: <UserDashboard />,
-      },
-      {
-        path: 'profile', // /user/profile
-        element: <UserProfile />,
-      },
-      {
-        path: 'settings', // /user/settings
-        element: <UserSettings />,
-      },
+      // {
+      //   path: 'dashboard', // /user/dashboard
+      //   element: <UserDashboard />,
+      // },
+      // {
+      //   path: 'profile', // /user/profile
+      //   element: <UserProfile />,
+      // },
+      // {
+      //   path: 'settings', // /user/settings
+      //   element: <UserSettings />,
+      // },
     ],
   },
 
@@ -130,17 +130,17 @@ const router = createBrowserRouter([
     path: '/app',
     element: <AnyUserLayout />,
     children: [
-      {
-        path: 'profile', // /app/profile (accessible by all)
-        element: <UserProfile />,
-      },
+      // {
+      //   path: 'profile', // /app/profile (accessible by all)
+      //   element: <UserProfile />,
+      // },
     ],
   },
 
   // Error routes
   {
     path: '/unauthorized',
-    element: <Unauthorized />,
+    // element: <Unauthorized />,
   },
   {
     path: '*',
