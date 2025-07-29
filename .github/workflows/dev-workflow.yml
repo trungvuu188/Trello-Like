@@ -1,0 +1,144 @@
+name: Development Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feat/* ]
+  pull_request:
+    branches: [ main, develop, feat/* ]
+
+jobs:
+  # Job 1: Setup environment & cache
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=node-modules-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            node-modules-
+
+      - name: Install dependencies
+        run: npm ci
+
+  # Job 2: Lint & format check
+  lint-and-format:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Run ESLint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Check Prettier formatting
+        continue-on-error: true
+        run: npm run format:check
+
+  # Job 3: Run tests
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Run unit tests
+        run: npm run test:run
+
+      - name: Generate test coverage
+        run: npm run test:coverage
+
+  # Job 4: Type checking
+  type-check:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: TypeScript type checking
+        run: npx tsc --noEmit
+
+  # Job 5: Build application & Deploy to Vercel
+  build:
+    needs: [setup, lint-and-format, test, type-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore node modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy to Vercel
+        run: |
+          npx vercel --prod --yes \
+            --token=${{ secrets.TRELLO_FRONTEND_VERCEL_TOKEN }}
+        env:
+          #VERCEL_ORG_ID: ${{ secrets.TRELLO_FRONTEND_VERCEL_ORG_ID }}
+          VERCEL_ORG_ID: team_BgmflEJskgAvOLSn4jr34dyE
+          #VERCEL_PROJECT_ID: ${{ secrets.TRELLO_FRONTEND_VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_ID: prj_C2U1FugxD9lDCeMqvgZhpmAhTRna

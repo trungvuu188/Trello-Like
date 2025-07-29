@@ -1,9 +1,13 @@
-import { Outlet } from "react-router-dom"
+import type { LayoutProps } from "@/types/user.types";
 
-export const MainLayout = () => {
+export const MainLayout: React.FC<LayoutProps> = ({
+    children
+}) => {
     return (
-        <>
-            <Outlet />
-        </>
+        <div className="h-screen flex flex-col">
+            <div className="flex-1 overflow-hidden">
+                {children}
+            </div>
+        </div>
     )
 };
