@@ -140,5 +140,4 @@ jobs:
         env:
           #VERCEL_ORG_ID: ${{ secrets.TRELLO_FRONTEND_VERCEL_ORG_ID }}
           VERCEL_ORG_ID: team_BgmflEJskgAvOLSn4jr34dyE
-          #VERCEL_PROJECT_ID: ${{ secrets.TRELLO_FRONTEND_VERCEL_PROJECT_ID }}
           VERCEL_PROJECT_ID: prj_C2U1FugxD9lDCeMqvgZhpmAhTRna
