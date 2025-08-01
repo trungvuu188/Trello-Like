@@ -23,11 +23,11 @@ export const RoleRedirect: React.FC = () => {
   }
 
   // Redirect based on user role
-  if (userRole === 'ADMIN') {
+  if (userRole === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
   }
   
-  if (userRole === 'USER') {
+  if (userRole === 'user') {
     return <Navigate to="/user/dashboard" replace />;
   }
 

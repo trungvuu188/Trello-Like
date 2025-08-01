@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { authService } from '@/services/authService';
-import type { User, UserRole } from '@/types/user.types';
+import authService from '@/services/authService';
+import type { AuthResponse, UserRole } from '@/types/user.types';
 
 interface AuthState {
-  user: User | null;
+  user: AuthResponse | null;
   userRole: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -29,10 +29,9 @@ export const loginUser = createAsyncThunk(
       const response = await authService.login(email, password);
       // After successful login, fetch user role
       const roleResponse = await authService.getUserRole();
-      
       return {
-        user: response.user,
-        role: roleResponse.role,
+        user: response.data,
+        role: roleResponse.data,
       };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Login failed');
@@ -47,10 +46,10 @@ export const checkAuthStatus = createAsyncThunk(
     try {
       const response = await authService.getMe();
       const roleResponse = await authService.getUserRole();
-      
+
       return {
-        user: response.user,
-        role: roleResponse.role,
+        user: response.data,
+        role: roleResponse.data,
       };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Authentication check failed');
@@ -97,20 +96,21 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<{ user: User; role: UserRole }>) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<{ user: AuthResponse; role: UserRole }>) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.userRole = action.payload.role;
+        state.userRole = action.payload.role
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.userRole = null;
         state.isAuthenticated = false;
-        state.error = action.payload as string;
+        // state.error = action.payload as string;
+        state.error = "Invalid email or password!" as string;
         state.isInitialized = true;
       });
 
@@ -119,7 +119,7 @@ const authSlice = createSlice({
       .addCase(checkAuthStatus.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(checkAuthStatus.fulfilled, (state, action: PayloadAction<{ user: User; role: UserRole }>) => {
+      .addCase(checkAuthStatus.fulfilled, (state, action: PayloadAction<{ user: AuthResponse; role: UserRole }>) => {
         state.isLoading = false;
         state.user = action.payload.user;
         state.userRole = action.payload.role;
