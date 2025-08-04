@@ -28,7 +28,7 @@ const AdminLayout = () => (
 );
 
 const UserLayout = () => (
-  <ProtectedRoute requiredRole="USER" fallback={<UnauthorizedFallback />}>
+  <ProtectedRoute requiredRole="user" fallback={<UnauthorizedFallback />}>
     <MainLayout>
       <Outlet />
     </MainLayout>

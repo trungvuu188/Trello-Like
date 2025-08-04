@@ -10,16 +10,16 @@ export interface User {
   // NO role field here - never trust frontend with roles
 }
 
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'admin' | 'user';
 
 export interface AuthResponse {
-  user: User;
-  message: string;
+  id: Number,
+  name: String,
+  email: String
 }
 
 export interface UserRoleResponse {
   role: UserRole;
-  message: string;
 }
 
 // Route-related types

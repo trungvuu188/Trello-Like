@@ -32,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check admin-only access
-  if (adminOnly && userRole !== 'ADMIN') {
+  if (adminOnly && userRole !== 'admin') {
     if (redirectTo) {
       return <Navigate to={redirectTo} replace />;
     }

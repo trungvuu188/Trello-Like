@@ -1,7 +1,10 @@
+import authService from '@/services/authService';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const RegisterForm: React.FC = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,11 +32,12 @@ const RegisterForm: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Add your registration logic here
-      console.log('Registration data:', formData);
-      // await register(formData);
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+      // console.log('Registration data:', formData);
+      await authService.register(formData.name, formData.email, formData.password);
+      navigate("/login");
+    } catch (err: any) {
+      console.log(err)
+      setError(err.response.data.message);
     } finally {
       setIsLoading(false);
     }
@@ -115,6 +119,7 @@ const RegisterForm: React.FC = () => {
             name="password"
             type="password"
             required
+            minLength={6}
             value={formData.password}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
@@ -132,6 +137,7 @@ const RegisterForm: React.FC = () => {
             name="confirmPassword"
             type="password"
             required
+            minLength={6}
             value={formData.confirmPassword}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
