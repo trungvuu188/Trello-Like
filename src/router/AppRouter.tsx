@@ -13,10 +13,10 @@ import NotFound from '@/components/shared/NotFound';
 import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback';
 
 // Auth pages
-import LoginForm from '@/components/auth/LoginForm';
 import AuthLayout from '@/components/layout/AuthLayout';
-import RegisterForm from '@/components/auth/RegisterForm';
 import UserDashboard from '@/pages/UserDashboard';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -47,11 +47,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <LoginForm />
+        element: <LoginPage />
       },
       {
         path: 'signup',
-        element: <RegisterForm />
+        element: <RegisterPage />
       }
     ]
   },

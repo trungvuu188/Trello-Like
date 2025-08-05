@@ -2,7 +2,7 @@ import authService from '@/services/authService';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const RegisterForm: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -201,4 +201,4 @@ const RegisterForm: React.FC = () => {
   );
 };
 
-export default RegisterForm;
+export default RegisterPage;
