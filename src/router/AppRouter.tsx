@@ -17,6 +17,7 @@ import LoginForm from '@/components/auth/LoginForm';
 import AuthLayout from '@/components/layout/AuthLayout';
 import RegisterForm from '@/components/auth/RegisterForm';
 import UserDashboard from '@/pages/UserDashboard';
+import Board from '@/pages/Board';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -75,22 +76,6 @@ const router = createBrowserRouter([
         index: true, // /admin
         element: <Navigate to="/admin/dashboard" replace />,
       },
-      // {
-      //   path: 'dashboard', // /admin/dashboard
-      //   element: <AdminDashboard />,
-      // },
-      // {
-      //   path: 'users', // /admin/users
-      //   element: <UserManagement />,
-      // },
-      // {
-      //   path: 'users/:id', // /admin/users/123
-      //   element: <UserManagement />,
-      // },
-      // {
-      //   path: 'settings', // /admin/settings
-      //   element: <SystemSettings />,
-      // },
     ],
   },
 
@@ -99,22 +84,14 @@ const router = createBrowserRouter([
     path: '/user',
     element: <UserLayout />,
     children: [
-      // {
-      //   index: true, 
-      //   element: <Navigate to="/user/dashboard" replace />,
-      // },
       {
         path: 'dashboard',
         element: <UserDashboard />,
       },
-      // {
-      //   path: 'profile', // /user/profile
-      //   element: <UserProfile />,
-      // },
-      // {
-      //   path: 'settings', // /user/settings
-      //   element: <UserSettings />,
-      // },
+      {
+        path: 'board',
+        element: <Board />,
+      },
     ],
   },
 
