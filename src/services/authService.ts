@@ -1,79 +1,46 @@
-import type { AuthResponse, UserRoleResponse } from '@/types/user.types';
+import type { ApiResponse } from '@/types';
+import type { AuthResponse, UserRole } from '@/types/user.types';
+import axiosClients from './axiosClient';
 
-class AuthService {
-  private baseURL = '/api/auth'; // Your backend API base URL
+const baseURL = '/auth';
+
+const authService = {
+
+  // Register user
+  register(name: String, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return axiosClients.post(`${baseURL}/register`, {
+      name,
+      email,
+      password
+    });
+  },
 
   // Login user
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseURL}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include httpOnly cookies
-      body: JSON.stringify({ email, password }),
+  login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return axiosClients.post(`${baseURL}/login`, {
+      email,
+      password
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
-    }
-
-    return response.json();
-  }
+  },
 
   // Check if user is authenticated (validate cookie)
-  async getMe(): Promise<AuthResponse> {
-    const response = await fetch(`${this.baseURL}/me`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Not authenticated');
-    }
-
-    return response.json();
-  }
+  getMe(): Promise<ApiResponse<AuthResponse>> {
+    return axiosClients.get(`${baseURL}/me`);
+  },
 
   // Get user role (backend determines based on database)
-  async getUserRole(): Promise<UserRoleResponse> {
-    const response = await fetch(`${this.baseURL}/role`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch user role');
-    }
-
-    return response.json();
-  }
+  async getUserRole(): Promise<ApiResponse<UserRole>> {
+    return axiosClients.get(`${baseURL}/role`);
+  },
 
   // Logout user
   async logout(): Promise<void> {
-    const response = await fetch(`${this.baseURL}/logout`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Logout failed');
-    }
-  }
+    axiosClients.post(`${baseURL}/logout`);
+  },
 
   // Forgot password
   async forgotPassword(email: string): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseURL}/forgot-password`, {
+    const response = await fetch(`${baseURL}/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,11 +54,11 @@ class AuthService {
     }
 
     return response.json();
-  }
+  },
 
   // Reset password
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseURL}/reset-password`, {
+    const response = await fetch(`${baseURL}/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -106,6 +73,7 @@ class AuthService {
 
     return response.json();
   }
+
 }
 
-export const authService = new AuthService();
+export default authService;

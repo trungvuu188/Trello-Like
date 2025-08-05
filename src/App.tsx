@@ -1,17 +1,9 @@
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from '@/store';
-import { AppRouter } from '@/router/AppRouter';
+import { store, persistor } from './store';
+import LoadingFallback from './components/ui/LoadingFallback';
 import './index.css';
-
-const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600">Loading application...</p>
-    </div>
-  </div>
-);
+import { AppRouter } from './router/AppRouter';
 
 function App() {
   return (

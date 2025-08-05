@@ -15,6 +15,7 @@ export const useAuth = () => {
       if (loginUser.fulfilled.match(result)) {
         return result.payload;
       } else {
+        console.error(result)
         throw new Error(result.payload as string);
       }
     },
@@ -45,11 +46,11 @@ export const useAuth = () => {
   );
 
   const isAdmin = useCallback((): boolean => {
-    return authState.userRole === 'ADMIN';
+    return authState.userRole === 'admin';
   }, [authState.userRole]);
 
   const isUser = useCallback((): boolean => {
-    return authState.userRole === 'USER';
+    return authState.userRole === 'user';
   }, [authState.userRole]);
 
   // Initialize auth check on app start
@@ -63,7 +64,9 @@ export const useAuth = () => {
     // State
     user: authState.user,
     userRole: authState.userRole,
+    // userRole: 'USER',
     isAuthenticated: authState.isAuthenticated,
+    // isAuthenticated: true,
     isLoading: authState.isLoading,
     error: authState.error,
     isInitialized: authState.isInitialized,

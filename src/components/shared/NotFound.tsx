@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export const NotFound: React.FC = () => {
+const NotFound = () => {
   const navigate = useNavigate();
   
   return (
@@ -20,11 +20,10 @@ export const NotFound: React.FC = () => {
           >
             Go Back
           </button>
-          <Link to="/dashboard" className="btn-primary">
-            Go to Dashboard
-          </Link>
         </div>
       </div>
     </div>
   );
 };
+
+export default NotFound;
