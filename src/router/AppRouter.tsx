@@ -5,7 +5,6 @@ import {
     Outlet,
 } from 'react-router-dom';
 import ProtectedRoute from '@/components/guards/ProtectedRoute';
-import { RoleRedirect } from '@/components/guards/RoleRedirect';
 import { MainLayout } from '@/components/layout/MainLayout';
 
 // Shared pages
