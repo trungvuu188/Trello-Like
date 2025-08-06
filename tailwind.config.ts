@@ -77,3 +77,10 @@ export default {
     // require('@tailwindcss/aspect-ratio'),
   ],
 }
+
+module.exports = {
+  // ... other config
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
+}

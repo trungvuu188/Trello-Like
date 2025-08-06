@@ -30,22 +30,6 @@ const Navbar: React.FC = () => {
             </div>
             <span className="text-white font-semibold text-lg">Trello</span>
           </div>
-
-          {/* Navigation Items */}
-          <div className="hidden md:flex items-center space-x-1">
-            <button className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded">
-              Workspaces
-            </button>
-            <button className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded">
-              Recent
-            </button>
-            <button className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded">
-              Starred
-            </button>
-            <button className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded">
-              Templates
-            </button>
-          </div>
         </div>
 
         {/* Center - Search */}

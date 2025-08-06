@@ -1,9 +1,9 @@
 import DroppableColumn from "@/components/board/DroppableColumn/DroppableColumn";
 import type { Column, Item } from "@/types";
-import { closestCenter, DndContext, DragOverlay, KeyboardSensor, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent, type UniqueIdentifier } from "@dnd-kit/core";
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, pointerWithin,  useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent, type UniqueIdentifier } from "@dnd-kit/core";
 import { arrayMove, horizontalListSortingStrategy, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { GripVertical, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Board = () => {
 
@@ -35,7 +35,11 @@ const Board = () => {
         },
     ]);
 
-    const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
+    const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+
+    const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
+    const [cardTitle, setCardTitle] = useState("");
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -48,8 +52,29 @@ const Board = () => {
         })
     );
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setActiveInputColumnId(null);
+                setCardTitle("");
+            }
+        };
+
+        if (activeInputColumnId) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeInputColumnId]);
+
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id);
+
+        // Close any active input when starting drag
+        setActiveInputColumnId(null);
+        setCardTitle("");
     };
 
     const handleDragOver = (event: DragOverEvent) => {
@@ -125,125 +150,60 @@ const Board = () => {
         }
     };
 
-    // const handleDragEnd = (event: DragEndEvent) => {
-    //     const { active, over } = event;
-
-    //     setActiveId(active.id);
-
-    //     if(!over) return;
-
-    //     const activeId = active.id;
-    //     const overId = over.id;
-
-    //     const isActiveAColumn = active.data.current?.type === 'column';
-    //     const isOverAColumn = over.data.current?.type === 'column';
-    //     const isActiveAnItem = active.data.current?.type === 'item';
-    //     const isOverAnItem = over.data.current?.type === 'item';
-
-    //     if(isActiveAColumn && isOverAColumn) {
-    //         setColumns(columns => {
-    //             const activeColumnIndex = columns.findIndex(col =>
-    //                 col.id === activeId
-    //             );
-    //             const overColumnIndex = columns.findIndex(col => 
-    //                 col.id === overId
-    //             );
-
-    //             return arrayMove(columns, activeColumnIndex, overColumnIndex);
-    //         });
-    //     }
-
-    //     if (isActiveAnItem && isOverAnItem) {
-    //         setColumns(columns => {
-    //             const activeColumnIndex = columns.findIndex(col => 
-    //                 col.items.find(item => item.id === activeId)
-    //             );
-    //             const overColumnIndex = columns.findIndex(col => 
-    //                 col.items.find(item => item.id === overId)
-    //             );
-
-    //             if (activeColumnIndex === overColumnIndex) {
-    //                 const column = columns[activeColumnIndex];
-    //                 const activeItemIndex = column.items.findIndex(item => 
-    //                     item.id === activeId
-    //                 );
-    //                 const overItemIndex = column.items.findIndex(item => 
-    //                     item.id === overId
-    //                 );
-
-    //                 column.items = arrayMove(column.items, activeItemIndex, overItemIndex);
-    //                 return [...columns];
-    //             }
-
-    //             return columns;
-    //         })
-    //     }
-    // }
-
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
-        // 1) Clear the drag state immediately
         setActiveId(null);
 
-        // 2) If nothing was dropped over, bail out
-        if (!over || active.id === over.id) return;
+        if(!over) return;
 
-        // 3) Figure out what we're dragging
-        const activeType = active.data.current?.type;
-        const overType   = over.data.current?.type;
+        const activeId = active.id;
+        const overId = over.id;
 
-        setColumns(cols => {
-        // A) Column reordering
-        if (activeType === 'column' && overType === 'column') {
-            const oldIndex = cols.findIndex(c => c.id === active.id);
-            const newIndex = cols.findIndex(c => c.id === over.id);
-            return arrayMove(cols, oldIndex, newIndex);
-        }
+        const isActiveAColumn = active.data.current?.type === 'column';
+        const isOverAColumn = over.data.current?.type === 'column';
+        const isActiveAnItem = active.data.current?.type === 'item';
+        const isOverAnItem = over.data.current?.type === 'item';
 
-        // B) Item reordering within same column
-        if (activeType === 'item' && overType === 'item') {
-            // Locate source & destination columns
-            const sourceIdx = cols.findIndex(c => c.items.some(i => i.id === active.id));
-            const targetIdx = cols.findIndex(c => c.items.some(i => i.id === over.id));
+        if(isActiveAColumn && isOverAColumn) {
+            setColumns(columns => {
+                const activeColumnIndex = columns.findIndex(col =>
+                    col.id === activeId
+                );
+                const overColumnIndex = columns.findIndex(col => 
+                    col.id === overId
+                );
 
-            // If same column, just reorder in place
-            if (sourceIdx === targetIdx) {
-            const column     = cols[sourceIdx];
-            const fromIndex  = column.items.findIndex(i => i.id === active.id);
-            const toIndex    = column.items.findIndex(i => i.id === over.id);
-
-            const newItems = arrayMove(column.items, fromIndex, toIndex);
-            // Return brand-new array of columns with updated items
-            return cols.map((c, idx) =>
-                idx === sourceIdx ? { ...c, items: newItems } : c
-            );
-            }
-        }
-
-        // (Optional) C) Item moved into another column at drop time
-        if (activeType === 'item' && overType === 'column') {
-            const sourceIdx = cols.findIndex(c => c.items.some(i => i.id === active.id));
-            const targetIdx = cols.findIndex(c => c.id === over.id);
-
-            const sourceCol = cols[sourceIdx];
-            const [movedItem] = sourceCol.items.filter(i => i.id === active.id);
-
-            return cols.map((c, idx) => {
-            if (idx === sourceIdx) {
-                return { ...c, items: c.items.filter(i => i.id !== active.id) };
-            }
-            if (idx === targetIdx) {
-                return { ...c, items: [...c.items, movedItem] };
-            }
-            return c;
+                return arrayMove(columns, activeColumnIndex, overColumnIndex);
             });
         }
 
-        // 4) If none of the above, no change
-        return cols;
-        });
-    };
+        if (isActiveAnItem && isOverAnItem) {
+            setColumns(columns => {
+                const activeColumnIndex = columns.findIndex(col => 
+                    col.items.find(item => item.id === activeId)
+                );
+                const overColumnIndex = columns.findIndex(col => 
+                    col.items.find(item => item.id === overId)
+                );
+
+                if (activeColumnIndex === overColumnIndex) {
+                    const column = columns[activeColumnIndex];
+                    const activeItemIndex = column.items.findIndex(item => 
+                        item.id === activeId
+                    );
+                    const overItemIndex = column.items.findIndex(item => 
+                        item.id === overId
+                    );
+
+                    column.items = arrayMove(column.items, activeItemIndex, overItemIndex);
+                    return [...columns];
+                }
+
+                return columns;
+            })
+        }
+    }
 
     const addColumn = () => {
         const newColumn: Column = {
@@ -254,19 +214,79 @@ const Board = () => {
         setColumns([...columns, newColumn]);
     };
 
-    const addItem = (columnId: string) => {
-        const newItem: Item = {
-            id: `item-${Date.now()}`,
-            content: `New task ${Math.floor(Math.random() * 1000)}`,
-        };
-
+    const handleUpdateColumnTitle = (columnId: string, newTitle: string) => {
         setColumns((columns) =>
             columns.map((column) =>
-            column.id === columnId
-                ? { ...column, items: [...column.items, newItem] }
-                : column
+                column.id === columnId
+                    ? { ...column, title: newTitle }
+                    : column
             )
         );
+    };
+
+    const deleteColumn = (columnId: string) => {
+        setColumns((columns) => columns.filter((column) => column.id !== columnId));
+        if (activeInputColumnId === columnId) {
+            setActiveInputColumnId(null);
+            setCardTitle("");
+        }
+    };
+
+    const handleStartAddingCard = (columnId: string) => {
+        setActiveInputColumnId(columnId);
+        setCardTitle("");
+    };
+
+    const handleSubmitCard = async (columnId: string) => {
+        if (cardTitle.trim()) {
+            // Detect if there's a URL in the content
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const detectedUrl = cardTitle.match(urlRegex)?.[0];
+            
+            let urlPreviewData = null;
+            
+            // If URL is detected, fetch its preview
+            if (detectedUrl) {
+                try {
+                    // Fetch URL preview (you can extract this to a separate function)
+                    const response = await fetch(`https://jsonlink.io/api/extract?url=${encodeURIComponent(detectedUrl)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        urlPreviewData = {
+                            url: detectedUrl,
+                            title: data.title || 'No title available',
+                            description: data.description || '',
+                            image: data.images?.[0] || data.image || '',
+                            siteName: data.domain || new URL(detectedUrl).hostname,
+                            favicon: data.favicon || `https://www.google.com/s2/favicons?domain=${new URL(detectedUrl).hostname}&sz=32`
+                        };
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch URL preview:', error);
+                }
+            }
+
+            const newItem: Item = {
+                id: `item-${Date.now()}`,
+                content: cardTitle.trim(),
+                urlPreview: urlPreviewData || undefined
+            };
+
+            setColumns((columns) =>
+                columns.map((column) =>
+                column.id === columnId
+                    ? { ...column, items: [...column.items, newItem] }
+                    : column
+                )
+            );
+        }
+        setActiveInputColumnId(null);
+        setCardTitle("");
+    };
+
+    const handleCancelCard = () => {
+        setActiveInputColumnId(null);
+        setCardTitle("");
     };
 
     const deleteItem = (itemId: string) => {
@@ -278,14 +298,9 @@ const Board = () => {
         );
     };
 
-    const deleteColumn = (columnId: string) => {
-        setColumns((columns) => columns.filter((column) => column.id !== columnId));
-    };
-
     const activeColumn = columns.find(col => col.id === activeId)
     const activeItem = columns.flatMap(col => col.items)
                             .find(item => item.id === activeId)
-
 
     return (
         <div className="bg-[#283449] w-full h-full flex flex-col">
@@ -311,9 +326,16 @@ const Board = () => {
                                         key={col.id}
                                         column={col}
                                         items={col.items}
-                                        onAddItem={addItem}
+                                        isAddingCard={activeInputColumnId === col.id}
+                                        cardTitle={cardTitle}
+                                        setCardTitle={setCardTitle}
+                                        onStartAddingCard={handleStartAddingCard}
+                                        onSubmitCard={handleSubmitCard}
+                                        onCancelCard={handleCancelCard}
                                         onDeleteItem={deleteItem}
                                         onDeleteColumn={deleteColumn}
+                                        onUpdateColumnTitle={handleUpdateColumnTitle}
+
                                     />
                                 ))
                             }

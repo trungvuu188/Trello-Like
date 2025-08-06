@@ -59,6 +59,10 @@
   }
 }
 
+*, ::after, ::before {
+  box-sizing: border-box;
+}
+
 /* Scrollbar Track */
 ::-webkit-scrollbar {
   width: 8px;             /* or height for horizontal scrollbar */
@@ -86,4 +90,6 @@
 body {
   scrollbar-gutter: stable; /* optional: prevent layout shift */
 }
+
+
 
