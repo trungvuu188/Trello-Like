@@ -35,9 +35,10 @@ const RegisterPage: React.FC = () => {
       // console.log('Registration data:', formData);
       await authService.register(formData.name, formData.email, formData.password);
       navigate("/login");
-    } catch (err: any) {
-      console.log(err)
-      setError(err.response.data.message);
+    } catch (error: any) {
+      console.log(error)
+      setError(error?.response?.data?.message);
+      // setError("Email already exists!");
     } finally {
       setIsLoading(false);
     }
@@ -48,12 +49,12 @@ const RegisterPage: React.FC = () => {
       {/* Logo/Brand */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-lg mb-4">
-          <svg 
-            className="w-8 h-8 text-white" 
-            fill="currentColor" 
+          <svg
+            className="w-8 h-8 text-white"
+            fill="currentColor"
             viewBox="0 0 24 24"
           >
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">Sunny</h1>
@@ -65,7 +66,7 @@ const RegisterPage: React.FC = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
-            <button 
+            <button
               type="button"
               onClick={() => setError('')}
               className="float-right text-red-400 hover:text-red-600 ml-2"
@@ -166,8 +167,8 @@ const RegisterPage: React.FC = () => {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Already have an account?{' '}
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
           >
             Sign in
@@ -178,7 +179,7 @@ const RegisterPage: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-center mb-2">
             <svg className="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M7.5 2L2 7.5V22h14.5L22 16.5V2H7.5z"/>
+              <path d="M7.5 2L2 7.5V22h14.5L22 16.5V2H7.5z" />
             </svg>
             <span className="text-sm font-medium text-gray-700">THOUSAND SUNNY</span>
           </div>
