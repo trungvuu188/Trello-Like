@@ -142,12 +142,12 @@ const UserDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Try Trello Premium */}
+          {/* Try Trello Premium
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white">
             <h4 className="font-semibold text-sm mb-1">Try Trello Premium</h4>
             <p className="text-xs opacity-90 mb-2">Get Planner (full access), Atlassian Intelligence, card mirroring, list colors, and more.</p>
             <button className="text-xs underline hover:no-underline">Start free trial</button>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -256,12 +256,12 @@ const UserDashboard: React.FC = () => {
                     </svg>
                     Settings
                   </button>
-                  <button className="flex items-center px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded">
+                  {/* <button className="flex items-center px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded">
                     <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     Upgrade
-                  </button>
+                  </button> */}
                 </div>
               </div>
 

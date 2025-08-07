@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -17,7 +20,7 @@ const Navbar: React.FC = () => {
           {/* Grid Icon */}
           <button className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+              <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
             </svg>
           </button>
 
@@ -25,7 +28,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-2">
             <div className="bg-blue-600 p-1 rounded">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9z"/>
+                <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9z" />
               </svg>
             </div>
             <span className="text-white font-semibold text-lg">Trello</span>
@@ -106,7 +109,7 @@ const Navbar: React.FC = () => {
                   <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">
                     ACCOUNT
                   </div>
-                  
+
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || 'VT'}

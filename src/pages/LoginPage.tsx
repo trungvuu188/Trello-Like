@@ -6,17 +6,22 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { login, isLoading, error, isAuthenticated, clearAuthError } = useAuth();
+  const { login, isLoading, error, isAuthenticated, clearAuthError, isUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    clearAuthError()
+    if (isAuthenticated && isUser()) {
       const from = (location.state as any)?.from || '/dashboard';
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+    else if (isAuthenticated && !isUser()) {
+      const from = (location.state as any)?.from || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location, isUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

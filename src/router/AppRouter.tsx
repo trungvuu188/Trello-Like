@@ -17,6 +17,7 @@ import AuthLayout from '@/components/layout/AuthLayout';
 import UserDashboard from '@/pages/UserDashboard';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
+import AdminDashboard from '@/pages/AdminDashboard';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -75,10 +76,10 @@ const router = createBrowserRouter([
         index: true, // /admin
         element: <Navigate to="/admin/dashboard" replace />,
       },
-      // {
-      //   path: 'dashboard', // /admin/dashboard
-      //   element: <AdminDashboard />,
-      // },
+      {
+        path: 'dashboard', // /admin/dashboard
+        element: <AdminDashboard />,
+      },
       // {
       //   path: 'users', // /admin/users
       //   element: <UserManagement />,
