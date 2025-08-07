@@ -1,15 +1,16 @@
+export interface UrlPreviewData {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  favicon?: string;
+}
+
 export interface Item {
     id: string;
     content: string;
-
-    urlPreview?: {
-    url: string;
-    title?: string;
-    description?: string;
-    image?: string;
-    siteName?: string;
-    favicon?: string;
-  };
+    urlPreview?: UrlPreviewData
 }
 
 export interface Column {

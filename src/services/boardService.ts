@@ -1,11 +1,14 @@
-export const fetchUrlPreview = async (url: string) => {
-  const response = await fetch(`https://api.linkpreview.net/?key=YOUR_API_KEY&q=${encodeURIComponent(url)}`);
-  const data = await response.json();
-  return {
-    url,
-    title: data.title,
-    description: data.description,
-    image: data.image,
-    siteName: data.site_name
-  };
+import type { UrlPreviewData } from "@/types";
+import axiosClients from "./axiosClient";
+
+const baseUrl = '/url-preview'
+
+const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
+  return axiosClients.get(`${baseUrl}`, {
+    params: {
+      url
+    }
+  })
 };
+
+export { fetchUrlPreview }

@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import DraggableItem from "../DraggableItem/DraggableItem";
 import { useEffect, useRef, useState } from "react";
 import UrlPreview from "../URLPreview/UrlPreview";
+import { detectUrl } from "@/utils/UrlPreviewUtils";
 
 interface DroppableColumnProps {
     column: Column;
@@ -58,18 +59,12 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
         transition
     };
 
-    // URL detection regex
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    const detectUrl = (text: string): string | null => {
-        const matches = text.match(urlRegex);
-        return matches ? matches[0] : null;
-    };
-
     useEffect(() => {
         if (isAddingCard && inputRef.current) {
             inputRef.current.focus();
         }
+        console.log("ef1");
+        
     }, [isAddingCard]);
 
     useEffect(() => {
@@ -77,16 +72,22 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
             titleInputRef.current.focus();
             titleInputRef.current.select();
         }
+        console.log("ef2");
+
     }, [isEditingTitle]);
 
     useEffect(() => {
         setTitleValue(column.title);
+        console.log("ef3");
+
     }, [column.title]);
 
     // Detect URLs in card title
     useEffect(() => {
         const url = detectUrl(cardTitle);
         setDetectedUrl(url);
+        console.log("ef4");
+
     }, [cardTitle]);
 
     useEffect(() => {
@@ -99,6 +100,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
         if (isEditingTitle) {
             document.addEventListener('mousedown', handleClickOutside);
         }
+        console.log("ef5");
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
@@ -229,7 +231,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
                 </div>
             </SortableContext>
             
-            <div className="flex-shrink-0 mt-3">
+            <div className="flex-shrink-0 mt-3 pr-1">
                 {isAddingCard ? (
                     <div className="space-y-2" onClick={handleInputAreaClick}>
                         {detectedUrl && (
