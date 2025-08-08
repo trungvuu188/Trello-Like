@@ -36,22 +36,39 @@ const Board = () => {
     ]);
 
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-
     const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
     const [cardTitle, setCardTitle] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
 
-    // Store the original columns state before drag starts
-    const originalColumnsRef = useRef<Column[]>([]);
+    // OPTIMIZATION: Track dragging state separately from active elements
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragType, setDragType] = useState<'column' | 'item' | null>(null);
+
+    // OPTIMIZATION: Debounce drag operations
+    const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastDragOperationRef = useRef<string>('');
+
+    // OPTIMIZATION: Store temporary drag state separately
+    const dragStateRef = useRef<{
+        originalColumns: Column[];
+        currentColumns: Column[];
+        hasChanged: boolean;
+    }>({
+        originalColumns: [],
+        currentColumns: [],
+        hasChanged: false
+    });
+
+    // // Store the original columns state before drag starts
+    // const originalColumnsRef = useRef<Column[]>([]);
     
-    // Track the last drag over operation to prevent duplicate operations
-    const lastDragOverRef = useRef<{ activeId: UniqueIdentifier; overId: UniqueIdentifier } | null>(null);
+    // // Track the last drag over operation to prevent duplicate operations
+    // const lastDragOverRef = useRef<{ activeId: UniqueIdentifier; overId: UniqueIdentifier } | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 3
+                distance: 8
             }
         }),
         useSensor(KeyboardSensor, {
@@ -61,6 +78,17 @@ const Board = () => {
 
     // Memoize column IDs to prevent unnecessary SortableContext rerenders
     const columnIds = useMemo(() => columns.map(col => col.id), [columns]);
+
+    // OPTIMIZATION: Memoize active elements only when activeId changes
+    const activeElements = useMemo(() => {
+        if (!activeId) return { activeColumn: null, activeItem: null };
+        
+        const activeColumn = columns.find(col => col.id === activeId);
+        const activeItem = activeColumn ? null : 
+            columns.flatMap(col => col.items).find(item => item.id === activeId);
+        
+        return { activeColumn, activeItem };
+    }, [activeId, columns]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -83,118 +111,143 @@ const Board = () => {
         setActiveId(event.active.id);
         setIsDragging(true);
 
-        originalColumnsRef.current = columns;
-        lastDragOverRef.current = null;
+        // Determine drag type
+        const type = event.active.data.current?.type as 'column' | 'item';
+        setDragType(type);
+
+        // Store initial state
+        dragStateRef.current = {
+            originalColumns: columns,
+            currentColumns: columns,
+            hasChanged: false
+        };
 
         // Close any active input when starting drag
         setActiveInputColumnId(null);
         setCardTitle("");
     }, [columns]);
 
+    // OPTIMIZATION: Heavily optimized drag over with batching and debouncing
     const handleDragOver = useCallback((event: DragOverEvent) => {
         const { active, over } = event;
 
-        if(!over) return;
+        if (!over || !isDragging) return;
 
         const activeId = active.id;
         const overId = over.id;
 
-        if(activeId === overId) return;
+        if (activeId === overId) return;
 
-        if(lastDragOverRef.current?.activeId === activeId &&
-            lastDragOverRef.current?.overId === overId) {
+        // OPTIMIZATION: Create operation signature to prevent duplicate operations
+        const operationSignature = `${activeId}-${overId}`;
+        if (lastDragOperationRef.current === operationSignature) {
             return;
         }
+        lastDragOperationRef.current = operationSignature;
 
-        lastDragOverRef.current = { activeId, overId };
+        // OPTIMIZATION: Clear previous timeout and batch operations
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current);
+        }
 
-        const isActiveAnItem = active.data.current?.type === 'item';
-        const isOverAnItem = over.data.current?.type === 'item';
-        const isOverAColumn = over.data.current?.type === 'column';
+        // OPTIMIZATION 10: Batch drag operations with timeout
+        dragTimeoutRef.current = setTimeout(() => {
+            const isActiveAnItem = active.data.current?.type === 'item';
+            const isOverAnItem = over.data.current?.type === 'item';
+            const isOverAColumn = over.data.current?.type === 'column';
 
-        if(!isActiveAnItem) return;
+            if (!isActiveAnItem) return;
 
-        setColumns(prevColumns => {
+            // Work with current drag state instead of component state
+            let newColumns = [...dragStateRef.current.currentColumns];
+            let hasChanged = false;
+
             // Item over item (different column)
             if (isActiveAnItem && isOverAnItem) {
-                const activeColumnIndex = prevColumns.findIndex(col => 
+                const activeColumnIndex = newColumns.findIndex(col => 
                     col.items.find(item => item.id === activeId)
                 );
-                const overColumnIndex = prevColumns.findIndex(col => 
+                const overColumnIndex = newColumns.findIndex(col => 
                     col.items.find(item => item.id === overId)
                 );
 
-                if (activeColumnIndex !== overColumnIndex) {
-                    // Create new columns array with minimal mutations
-                    const newColumns = [...prevColumns];
+                if (activeColumnIndex !== -1 && overColumnIndex !== -1 && activeColumnIndex !== overColumnIndex) {
                     const activeColumn = { ...newColumns[activeColumnIndex] };
                     const overColumn = { ...newColumns[overColumnIndex] };
                     
-                    const activeItemIndex = activeColumn.items.findIndex(item =>
-                        item.id === activeId
-                    );
-                    const overItemIndex = overColumn.items.findIndex(item => 
-                        item.id === overId
-                    );
+                    const activeItemIndex = activeColumn.items.findIndex(item => item.id === activeId);
+                    const overItemIndex = overColumn.items.findIndex(item => item.id === overId);
 
-                    // Create new items arrays
-                    activeColumn.items = [...activeColumn.items];
-                    overColumn.items = [...overColumn.items];
-                    
-                    const [activeItem] = activeColumn.items.splice(activeItemIndex, 1);
-                    overColumn.items.splice(overItemIndex, 0, activeItem);
+                    if (activeItemIndex !== -1 && overItemIndex !== -1) {
+                        activeColumn.items = [...activeColumn.items];
+                        overColumn.items = [...overColumn.items];
+                        
+                        const [activeItem] = activeColumn.items.splice(activeItemIndex, 1);
+                        overColumn.items.splice(overItemIndex, 0, activeItem);
 
-                    newColumns[activeColumnIndex] = activeColumn;
-                    newColumns[overColumnIndex] = overColumn;
-
-                    return newColumns;
+                        newColumns[activeColumnIndex] = activeColumn;
+                        newColumns[overColumnIndex] = overColumn;
+                        hasChanged = true;
+                    }
                 }
             }
 
             // Item over column
             if (isActiveAnItem && isOverAColumn) {
-                const activeColumnIndex = prevColumns.findIndex(col => 
+                const activeColumnIndex = newColumns.findIndex(col => 
                     col.items.find(item => item.id === activeId)
                 );
-                const overColumnIndex = prevColumns.findIndex(col =>
-                    col.id === overId
-                );
+                const overColumnIndex = newColumns.findIndex(col => col.id === overId);
                 
-                if (activeColumnIndex !== overColumnIndex) {
-                    const newColumns = [...prevColumns];
+                if (activeColumnIndex !== -1 && overColumnIndex !== -1 && activeColumnIndex !== overColumnIndex) {
                     const activeColumn = { ...newColumns[activeColumnIndex] };
                     const overColumn = { ...newColumns[overColumnIndex] };
                     
-                    const activeItemIndex = activeColumn.items.findIndex(item => 
-                        item.id === activeId
-                    );
+                    const activeItemIndex = activeColumn.items.findIndex(item => item.id === activeId);
 
-                    activeColumn.items = [...activeColumn.items];
-                    overColumn.items = [...overColumn.items];
-                    
-                    const [activeItem] = activeColumn.items.splice(activeItemIndex, 1);
-                    overColumn.items.push(activeItem);
+                    if (activeItemIndex !== -1) {
+                        activeColumn.items = [...activeColumn.items];
+                        overColumn.items = [...overColumn.items];
+                        
+                        const [activeItem] = activeColumn.items.splice(activeItemIndex, 1);
+                        overColumn.items.push(activeItem);
 
-                    newColumns[activeColumnIndex] = activeColumn;
-                    newColumns[overColumnIndex] = overColumn;
-
-                    return newColumns;
+                        newColumns[activeColumnIndex] = activeColumn;
+                        newColumns[overColumnIndex] = overColumn;
+                        hasChanged = true;
+                    }
                 }
             }
 
-            return prevColumns;
-        });
+            // OPTIMIZATION: Only update state if something actually changed
+            if (hasChanged) {
+                dragStateRef.current.currentColumns = newColumns;
+                dragStateRef.current.hasChanged = true;
+                
+                // Update component state less frequently
+                setColumns(newColumns);
+            }
+        }, 16); // OPTIMIZATION: 16ms delay = ~60fps batching
+
     }, [isDragging]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
 
+        // OPTIMIZATION: Clear timeout and reset refs
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current);
+            dragTimeoutRef.current = null;
+        }
+
         setActiveId(null);
         setIsDragging(false);
-        lastDragOverRef.current = null;
+        setDragType(null);
+        lastDragOperationRef.current = '';
 
         if(!over) {
-            setColumns(originalColumnsRef.current);
+            // Restore original state if cancelled
+            setColumns(dragStateRef.current.originalColumns);
             return;
         };
 
@@ -209,14 +262,14 @@ const Board = () => {
         // Handle column reordering
         if(isActiveAColumn && isOverAColumn) {
             setColumns(columns => {
-                const activeColumnIndex = columns.findIndex(col =>
-                    col.id === activeId
-                );
-                const overColumnIndex = columns.findIndex(col => 
-                    col.id === overId
-                );
+                const activeColumnIndex = columns.findIndex(col => col.id === activeId);
+                const overColumnIndex = columns.findIndex(col => col.id === overId);
 
-                return arrayMove(columns, activeColumnIndex, overColumnIndex);
+                if(activeColumnIndex !== -1 && overColumnIndex !== -1) {
+                    return arrayMove(columns, activeColumnIndex, overColumnIndex);
+                }
+                
+                return columns;
             });
         }
 
@@ -230,21 +283,18 @@ const Board = () => {
                     col.items.find(item => item.id === overId)
                 );
 
-                if (activeColumnIndex === overColumnIndex) {
+                if (activeColumnIndex === overColumnIndex && activeColumnIndex !== -1) {
                     const newColumns = [...prevColumns];
                     const column = { ...newColumns[activeColumnIndex] };
                     
-                    const activeItemIndex = column.items.findIndex(item => 
-                        item.id === activeId
-                    );
-                    const overItemIndex = column.items.findIndex(item => 
-                        item.id === overId
-                    );
+                    const activeItemIndex = column.items.findIndex(item => item.id === activeId);
+                    const overItemIndex = column.items.findIndex(item => item.id === overId);
 
-                    column.items = arrayMove(column.items, activeItemIndex, overItemIndex);
-                    newColumns[activeColumnIndex] = column;
-                    
-                    return newColumns;
+                    if (activeItemIndex !== -1 && overItemIndex !== -1) {
+                        column.items = arrayMove(column.items, activeItemIndex, overItemIndex);
+                        newColumns[activeColumnIndex] = column;
+                        return newColumns;
+                    }
                 }
 
                 return prevColumns;
@@ -317,12 +367,24 @@ const Board = () => {
         );
     }, []);
 
-    const { activeColumn, activeItem } = useMemo(() => {    
-        const activeColumn = columns.find(col => col.id === activeId)
-        const activeItem = columns.flatMap(col => col.items)
-                                .find(item => item.id === activeId)
-        return { activeColumn, activeItem };
-    }, [columns, activeId]);
+    // const { activeColumn, activeItem } = useMemo(() => {    
+    //     const activeColumn = columns.find(col => col.id === activeId)
+    //     const activeItem = columns.flatMap(col => col.items)
+    //                             .find(item => item.id === activeId)
+    //     return { activeColumn, activeItem };
+    // }, [columns, activeId]);
+
+    // OPTIMIZATION: Memoize column props to prevent unnecessary rerenders
+    const columnProps = useMemo(() => 
+        columns.map(col => ({
+            key: col.id,
+            column: col,
+            items: col.items,
+            isAddingCard: activeInputColumnId === col.id,
+            isDragging: isDragging && dragType === 'item'
+        })), 
+        [columns, activeInputColumnId, isDragging, dragType]
+    );
 
     return (
         <div className="bg-[#283449] w-full h-full flex flex-col">
@@ -343,12 +405,12 @@ const Board = () => {
                             strategy={horizontalListSortingStrategy}
                         >
                             {
-                                columns.map(col => (
+                                columnProps.map(col => (
                                     <DroppableColumn 
-                                        key={col.id}
-                                        column={col}
+                                        key={col.key}
+                                        column={col.column}
                                         items={col.items}
-                                        isAddingCard={activeInputColumnId === col.id}
+                                        isAddingCard={col.isAddingCard}
                                         cardTitle={cardTitle}
                                         setCardTitle={setCardTitle}
                                         onStartAddingCard={handleStartAddingCard}
@@ -371,19 +433,19 @@ const Board = () => {
                         </button>
                     </div>
                     <DragOverlay>
-                        {activeColumn ? (
+                        {activeElements.activeColumn ? (
                             <div className="bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl">
                             <div className="flex items-center gap-2 mb-4">
                                 <GripVertical size={16} className="text-gray-400" />
-                                <h3 className="font-semibold text-white">{activeColumn.title}</h3>
+                                <h3 className="font-semibold text-white">{activeElements.activeColumn.title}</h3>
                                 <span className="bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full">
-                                {activeColumn.items.length}
+                                {activeElements.activeColumn.items.length}
                                 </span>
                             </div>
                             </div>
-                        ) : activeItem ? (
+                        ) : activeElements.activeItem ? (
                             <div className="bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2">
-                            <span className="text-sm text-white whitespace-pre-wrap break-words">{activeItem.content}</span>
+                            <span className="text-sm text-white whitespace-pre-wrap break-words">{activeElements.activeItem.content}</span>
                             </div>
                         ) : null}
                     </DragOverlay>

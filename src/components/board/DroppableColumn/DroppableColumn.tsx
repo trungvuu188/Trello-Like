@@ -3,7 +3,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, X } from "lucide-react";
 import DraggableItem from "../DraggableItem/DraggableItem";
-import { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UrlPreview from "../URLPreview/UrlPreview";
 import { detectUrl } from "@/utils/UrlPreviewUtils";
 
@@ -21,7 +21,7 @@ interface DroppableColumnProps {
     onUpdateColumnTitle: (columnId: string, newTitle: string) => void;
 }
 
-const DroppableColumn: React.FC<DroppableColumnProps> = ({
+const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     column,
     items,
     isAddingCard,
@@ -42,6 +42,8 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
     const titleInputRef = useRef<HTMLInputElement>(null);
     const columnRef = useRef<HTMLDivElement>(null);
 
+    console.log("render");
+
     const { 
         attributes, listeners, 
         setNodeRef, transform, 
@@ -59,12 +61,12 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
         transition
     };
 
+    const itemIds = useMemo(() => items.map(item => item.id), [items])
+
     useEffect(() => {
         if (isAddingCard && inputRef.current) {
             inputRef.current.focus();
         }
-        console.log("ef1");
-        
     }, [isAddingCard]);
 
     useEffect(() => {
@@ -72,81 +74,72 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
             titleInputRef.current.focus();
             titleInputRef.current.select();
         }
-        console.log("ef2");
-
     }, [isEditingTitle]);
 
-    useEffect(() => {
-        setTitleValue(column.title);
-        console.log("ef3");
-
-    }, [column.title]);
-
     // Detect URLs in card title
-    useEffect(() => {
-        const url = detectUrl(cardTitle);
-        setDetectedUrl(url);
-        console.log("ef4");
-
+    const memorizedDetectedUrl = useMemo(() => {
+        return cardTitle ? detectUrl(cardTitle) : null
     }, [cardTitle]);
 
     useEffect(() => {
+        setDetectedUrl(memorizedDetectedUrl);
+    }, [memorizedDetectedUrl]);
+
+    useEffect(() => {
+        if(!isEditingTitle) return;
+
         const handleClickOutside = (event: MouseEvent) => {
             if (isEditingTitle && columnRef.current && !columnRef.current.contains(event.target as Node)) {
                 handleTitleSubmit();
             }
         };
 
-        if (isEditingTitle) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        console.log("ef5");
-
+        document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isEditingTitle, titleValue]);
+    }, [isEditingTitle]);
 
-    const handleAddCard = () => {
+    const handleAddCard = useCallback(() => {
         // Close title editing when starting to add card
         if (isEditingTitle) {
             handleTitleSubmit();
         }
         onStartAddingCard(column.id);
-    };
+    }, [isEditingTitle, column.id, onStartAddingCard]);
 
-    const handleSubmit = () => {
+    const handleSubmit = useCallback(() => {
         onSubmitCard(column.id);
         setDetectedUrl(null);
-    };
+    }, [column.id, onSubmitCard]);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSubmit();
         } else if (e.key === 'Escape') {
             onCancelCard();
         }
-    };
+    }, [handleSubmit, onCancelCard]);
 
-    const handleTitleClick = () => {
+    const handleTitleClick = useCallback(() => {
         // Close add card input if it's open
         if (isAddingCard) {
             onCancelCard();
         }
         setIsEditingTitle(true);
-    };
+    }, [isAddingCard, onCancelCard]);
 
-    const handleTitleSubmit = () => {
+    const handleTitleSubmit = useCallback(() => {
         if (titleValue.trim() && titleValue.trim() !== column.title) {
             onUpdateColumnTitle(column.id, titleValue.trim());
         } else {
             setTitleValue(column.title); // Reset to original if empty or unchanged
         }
         setIsEditingTitle(false);
-    };
+    }, [titleValue, column.title, column.id, onUpdateColumnTitle]);
 
-    const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    const handleTitleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             handleTitleSubmit();
@@ -154,21 +147,35 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
             setTitleValue(column.title); // Reset to original
             setIsEditingTitle(false);
         }
-    };
+    }, [handleTitleSubmit, column.title]);
 
-    const handleRemoveUrlPreview = () => {
+    const handleRemoveUrlPreview = useCallback(() => {
         setDetectedUrl(null);
         // Optionally remove the URL from the card title
         if (detectedUrl) {
             const newTitle = cardTitle.replace(detectedUrl, '').trim();
             setCardTitle(newTitle);
         }
-    };
+    }, [detectUrl, cardTitle, setCardTitle]);
 
     // Prevent event bubbling to parent container when clicking inside the input area
-    const handleInputAreaClick = (e: React.MouseEvent) => {
+    const handleInputAreaClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-    };
+    }, []);
+
+    const handleDeleteColumn = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDeleteColumn(column.id);
+    }, [column.id, onDeleteColumn]);
+
+    const handleTitleInputClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
+    const handleTitleDisplay = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        handleTitleClick();
+    }, [handleTitleClick]);
 
     return (
         <div
@@ -194,32 +201,26 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
                             onKeyDown={handleTitleKeyDown}
                             onBlur={handleTitleSubmit}
                             className="font-semibold text-[#B6C2CF] bg-[#22272B] border border-[#394B59] rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1"
-                            onClick={(e) => e.stopPropagation()} // Prevent drag when clicking input
+                            onClick={handleTitleInputClick} // Prevent drag when clicking input
                         />
                     ) : (
                         <h3 
                             className="font-semibold text-[#B6C2CF] cursor-pointer hover:bg-[#22272B] rounded px-2 py-1 -mx-2 -my-1 transition-colors flex-1"
-                            onClick={(e) => {
-                                e.stopPropagation(); // Prevent drag when clicking title
-                                handleTitleClick();
-                            }}
+                            onClick={handleTitleDisplay}
                         >
                             {column.title}
                         </h3>
                     )}
                 </div>
                 <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteColumn(column.id);
-                    }}
+                    onClick={handleDeleteColumn}
                     className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
                 >
                     <X size={16} />
                 </button>
             </div>
             <SortableContext
-                items={items.map(item => item.id)}
+                items={itemIds}
                 strategy={verticalListSortingStrategy}
             >
                 <div className="overflow-y-auto space-y-3 pr-1">
@@ -279,6 +280,44 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
             </div>
         </div>
     );
-}
+};
+
+// Custom comparison function for React.memo
+const arePropsEqual = (prevProps: DroppableColumnProps, nextProps: DroppableColumnProps) => {
+    // Quick checks for primitive values
+    if (
+        prevProps.isAddingCard !== nextProps.isAddingCard ||
+        prevProps.cardTitle !== nextProps.cardTitle ||
+        prevProps.column.id !== nextProps.column.id ||
+        prevProps.column.title !== nextProps.column.title
+    ) {
+        return false;
+    }
+
+    // Check items array
+    if (prevProps.items.length !== nextProps.items.length) {
+        return false;
+    }
+
+    // Compare each item
+    for (let i = 0; i < prevProps.items.length; i++) {
+        const prevItem = prevProps.items[i];
+        const nextItem = nextProps.items[i];
+        
+        if (
+            prevItem.id !== nextItem.id ||
+            prevItem.content !== nextItem.content
+        ) {
+            return false;
+        }
+    }
+
+    // If all checks pass, props are equal
+    return true;
+};
+
+const DroppableColumn = React.memo(DroppableColumnComponent, arePropsEqual);
+
+DroppableColumn.displayName = 'DroppableColumn';
 
 export default DroppableColumn;
