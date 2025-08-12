@@ -6,13 +6,13 @@ import './index.css';
 import { AppRouter } from './router/AppRouter';
 
 function App() {
-  return (
-    <Provider store={store}>
-      <PersistGate loading={<LoadingFallback />} persistor={persistor}>
-        <AppRouter />
-      </PersistGate>
-    </Provider>
-  );
+    return (
+        <Provider store={store}>
+            <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+                <AppRouter />
+            </PersistGate>
+        </Provider>
+    );
 }
 
 export default App;
