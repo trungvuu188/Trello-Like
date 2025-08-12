@@ -11,6 +11,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     adminOnly = false,
     fallback,
     redirectTo,
+
 }) => {
     const { isAuthenticated, isLoading, userRole, isInitialized } = useAuth();
     const location = useLocation();
@@ -33,6 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             return <Navigate to={redirectTo} replace />;
         }
         return fallback || <UnauthorizedFallback />;
+
     }
 
     // Check specific role requirement
@@ -48,3 +50,4 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 };
 
 export default ProtectedRoute;
+

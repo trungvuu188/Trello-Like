@@ -159,6 +159,7 @@ const authSlice = createSlice({
                 state.isInitialized = true;
             });
 
+
         // Logout
         builder
             .addCase(logoutUser.pending, state => {
