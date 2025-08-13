@@ -6,26 +6,26 @@ import authSlice from './slices/authSlice';
 
 // Persist configuration
 const persistConfig = {
-  key: 'root',
-  storage,
-  whitelist: ['auth'] // Persist auth data including role
+    key: 'root',
+    storage,
+    whitelist: ['auth'], // Persist auth data including role
 };
 
 const rootReducer = combineReducers({
-  auth: authSlice,
+    auth: authSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
-      },
-    }),
-  devTools: process.env.NODE_ENV !== 'production',
+    reducer: persistedReducer,
+    middleware: getDefaultMiddleware =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+            },
+        }),
+    devTools: process.env.NODE_ENV !== 'production',
 });
 
 export const persistor = persistStore(store);
