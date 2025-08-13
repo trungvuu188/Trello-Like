@@ -3,7 +3,7 @@ import { detectUrl } from '@/utils/UrlPreviewUtils';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { X } from 'lucide-react';
-import UrlPreview from '../URLPreview/UrlPreview';
+import UrlPreview from './UrlPreview';
 
 interface DraggableItemProps {
     item: Item;

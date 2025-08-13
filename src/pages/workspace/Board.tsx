@@ -1,4 +1,4 @@
-import DroppableColumn from '@/components/board/DroppableColumn/DroppableColumn';
+import DroppableColumn from '@/components/board/DroppableColumn';
 import type { Column, Item } from '@/types';
 import {
     DndContext,

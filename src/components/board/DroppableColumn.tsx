@@ -6,7 +6,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, X } from 'lucide-react';
-import DraggableItem from '../DraggableItem/DraggableItem';
 import React, {
     useCallback,
     useEffect,
@@ -14,8 +13,9 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import UrlPreview from '../URLPreview/UrlPreview';
+import UrlPreview from './UrlPreview';
 import { detectUrl } from '@/utils/UrlPreviewUtils';
+import DraggableItem from './DraggableItem';
 
 interface DroppableColumnProps {
     column: Column;
@@ -50,8 +50,6 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const columnRef = useRef<HTMLDivElement>(null);
-
-    console.log('render');
 
     const {
         attributes,
