@@ -1,5 +1,5 @@
 import type { LayoutProps } from '@/types/user.types';
-import Navbar from './Navbar';
+import Navbar from './components/Navbar';
 
 export const MainLayout: React.FC<LayoutProps> = ({ children }) => {
     return (

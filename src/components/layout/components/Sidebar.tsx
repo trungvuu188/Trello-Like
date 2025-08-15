@@ -29,7 +29,7 @@ const workspaceItems = [
         id: 'w-item1',
         icon: <Folders />,
         title: 'Boards',
-        navigate: '/workspace/boards'
+        navigate: '/workspace/board'
     },
     {
         id: 'w-item2',

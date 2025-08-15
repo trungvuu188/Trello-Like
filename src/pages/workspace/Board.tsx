@@ -1,4 +1,5 @@
 import DroppableColumn from '@/components/board/DroppableColumn';
+import TaskDetailModal from '@/components/board/TaskDetailModal';
 import type { Column, Item } from '@/types';
 import {
     DndContext,
@@ -56,6 +57,7 @@ const Board = () => {
         string | null
     >(null);
     const [cardTitle, setCardTitle] = useState('');
+    const [showDetailModal, setShowDetailModal] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // OPTIMIZATION: Track dragging state separately from active elements
@@ -450,6 +452,14 @@ const Board = () => {
         );
     }, []);
 
+    const handleHideDetailModal = useCallback(() => {
+        setShowDetailModal(false);
+    }, []);
+
+    const handleShowDetailModal = useCallback(() => {
+        setShowDetailModal(true);
+    }, []);
+
     // OPTIMIZATION: Memoize column props to prevent unnecessary rerenders
     const columnProps = useMemo(
         () =>
@@ -496,9 +506,8 @@ const Board = () => {
                                     onCancelCard={handleCancelCard}
                                     onDeleteItem={deleteItem}
                                     onDeleteColumn={deleteColumn}
-                                    onUpdateColumnTitle={
-                                        handleUpdateColumnTitle
-                                    }
+                                    onUpdateColumnTitle={handleUpdateColumnTitle}
+                                    handleShowDetailTask={handleShowDetailModal}
                                 />
                             ))}
                         </SortableContext>
@@ -540,6 +549,11 @@ const Board = () => {
                     </DragOverlay>
                 </DndContext>
             </div>
+            <TaskDetailModal 
+                isOpen={showDetailModal}
+                onClose={handleHideDetailModal}
+                item={{id: '1', content: 'Hello'}}
+            />
         </div>
     );
 };

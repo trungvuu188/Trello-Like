@@ -8,9 +8,10 @@ import UrlPreview from './UrlPreview';
 interface DraggableItemProps {
     item: Item;
     onDelete: (itemId: string) => void;
+    handleShowDetailTask: () => void;
 }
 
-const DraggableItem: React.FC<DraggableItemProps> = ({ item, onDelete }) => {
+const DraggableItem: React.FC<DraggableItemProps> = ({ item, onDelete, handleShowDetailTask }) => {
     const {
         attributes,
         listeners,
@@ -37,6 +38,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({ item, onDelete }) => {
             style={style}
             {...attributes}
             {...listeners}
+            onClick={handleShowDetailTask}
             className={`
                 select-none bg-[#222f44] p-3 rounded-lg 
                 shadow-sm cursor-grab hover:shadow-md 
