@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type SetStateAction } from "react";
 
 interface CreateWorkspaceModalProps {
     isOpen: boolean;
@@ -6,7 +6,7 @@ interface CreateWorkspaceModalProps {
     onSubmit: (workspaceData: {
         name: string;
         type: string;
-        description: string;
+        description: string | null;
     }) => void;
 }
 
@@ -17,8 +17,10 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
 }) => {
     const [workspaceName, setWorkspaceName] = useState('');
     const [workspaceType, setWorkspaceType] = useState('');
-    const [workspaceDescription, setWorkspaceDescription] = useState('');
+    const [workspaceDescription, setWorkspaceDescription] = useState<string | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [workspaceNameError, setWorkspaceNameError] = useState('');
+    const [workspaceDescriptionError, setWorkspaceDescriptionError] = useState('');
 
     const workspaceTypes = [
         'Education',
@@ -32,18 +34,37 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
         'Other'
     ];
 
-    const handleSubmit = () => {
-        if (workspaceName.trim() && workspaceType) {
-            onSubmit({
-                name: workspaceName,
-                type: workspaceType,
-                description: workspaceDescription,
-            });
-            // Reset form
-            setWorkspaceName('');
-            setWorkspaceType('');
-            setWorkspaceDescription('');
-            onClose();
+    const handleSubmit = async () => {
+        if (workspaceName.trim()) {
+            try {
+                await onSubmit({
+                    name: workspaceName,
+                    type: workspaceType,
+                    description: workspaceDescription,
+                });
+                // Reset form fields
+                setWorkspaceName('');
+                setWorkspaceType('');
+                setWorkspaceDescription(null);
+                // Reset errors
+                setWorkspaceNameError('');
+                setWorkspaceDescriptionError('');
+                // Close modal
+                onClose();
+            } catch (error: any) {
+                const errorFields = error?.response?.data?.errors || [];
+                // Set error messages based on the response
+                errorFields.forEach((element: { field: string; message: SetStateAction<string>; }) => {
+                    switch (element.field) {
+                        case 'name':
+                            setWorkspaceNameError(element.message);
+                            break;
+                        case 'description':
+                            setWorkspaceDescriptionError(element.message);
+                            break;
+                    }
+                });
+            }
         }
     };
 
@@ -82,6 +103,13 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
                                 <label className="block text-sm font-medium mb-2">
                                     Workspace name
                                 </label>
+                                <div className="mb-2">
+                                    {workspaceNameError && (
+                                        <p className="text-red-500 text-sm mb-2">
+                                            {workspaceNameError}
+                                        </p>
+                                    )}
+                                </div>
                                 <input
                                     type="text"
                                     value={workspaceName}
@@ -141,9 +169,16 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
                                 <label className="block text-sm font-medium mb-2">
                                     Workspace description <span className="text-gray-400 font-normal">Optional</span>
                                 </label>
+                                <div className="mb-2">
+                                    {workspaceDescriptionError && (
+                                        <p className="text-red-500 text-sm mb-2">
+                                            {workspaceDescriptionError}
+                                        </p>
+                                    )}
+                                </div>
                                 <textarea
-                                    value={workspaceDescription}
-                                    onChange={(e) => setWorkspaceDescription(e.target.value)}
+                                    value={workspaceDescription || ''}
+                                    onChange={(e) => setWorkspaceDescription(e.target.value || null)}
                                     placeholder="Our team organizes everything here."
                                     rows={4}
                                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
@@ -156,7 +191,7 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
                             {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={!workspaceName.trim() || !workspaceType}
+                                disabled={!workspaceName.trim()}
                                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 px-4 rounded-md font-medium transition-colors"
                             >
                                 Continue
