@@ -14,6 +14,18 @@ const workspaceService = {
             description
         });
     },
+
+    // Update an existing workspace
+    updateWorkspace(
+        workspaceId: number,
+        name: string,
+        description: string | null
+    ): Promise<ApiResponse<{ message: string }>> {
+        return axiosClients.put(`${baseURL}/${workspaceId}`, {
+            name,
+            description
+        });
+    }
 }
 
 export default workspaceService;

@@ -22,6 +22,7 @@ import Template from '@/pages/Template';
 import Home from '@/pages/Home';
 import Member from '@/pages/workspace/Member';
 import Setting from '@/pages/workspace/Setting';
+import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -94,6 +95,10 @@ const router = createBrowserRouter([
                         path: 'home',
                         element: <Home />
                     },
+                    {
+                        path: 'detail',
+                        element: <WorkspaceDetail />,
+                    }
                 ]
             },
             {
@@ -111,6 +116,7 @@ const router = createBrowserRouter([
                         path: 'setting',
                         element: <Setting />,
                     },
+                    
                 ]
             },
         ],
