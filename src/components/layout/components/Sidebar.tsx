@@ -1,6 +1,8 @@
+import { getWorkspaces } from '@/services/workspaceService';
+import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
 import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navigationItems = [
@@ -29,7 +31,7 @@ const workspaceItems = [
         id: 'w-item1',
         icon: <Folders />,
         title: 'Boards',
-        navigate: '/workspace/board'
+        navigate: '/workspace/boards'
     },
     {
         id: 'w-item2',
@@ -45,35 +47,54 @@ const workspaceItems = [
     },
 ]
 
-interface Workspace {
-    id: number;
-    name: string;
-    isExpanded?: boolean;
-}
-
 const Sidebar = () => {
     const location = useLocation();
-    const [workspaces, setWorkSpaces] = useState<Workspace[]>([
-        {
-            id: 1,
-            name: 'Nashtech',
-            isExpanded: true,
-        },
-        {
-            id: 2,
-            name: 'Test',
-            isExpanded: false,
-        },
-    ]);
+    const [expandedWorkspaceIds, setExpandedWorkspaceIds] = useState<number[]>([]);
+    const [workspaces, setWorkSpaces] = useState<WorkSpace[]>([]);
 
-    const toggleWorkspace = (workspaceId: number) => {
-        setWorkSpaces(prevWorkspaces =>
-            prevWorkspaces.map(workspace =>
-                workspace.id === workspaceId
-                    ? { ...workspace, isExpanded: !workspace.isExpanded }
-                    : workspace
-            )
-        );
+    const fetchWorkspaces = async () => {
+        await getWorkspaces()
+            .then(data => {
+                if (!data.data) return;
+                setWorkSpaces([...data.data]);
+            })
+            .catch(err => console.log(err))
+    }
+
+    useEffect(() => {
+        // Load expanded workspace IDs from localStorage
+        const saved = localStorage.getItem('expandedWorkspaceIds');
+        if (saved) {
+            try {
+                const parsedIds = JSON.parse(saved);
+                if (Array.isArray(parsedIds)) {
+                    setExpandedWorkspaceIds(parsedIds);
+                }
+            } catch (error) {
+                console.error('Failed to parse expandedWorkspaceIds from localStorage:', error);
+            }
+        }
+
+        fetchWorkspaces()
+    }, []);
+
+    const handleExpandWorkspace = (workspaceId: number) => {
+        setExpandedWorkspaceIds(prev => {
+            let newExpandedIds;
+
+            if (prev.includes(workspaceId)) {
+                // Remove the workspace ID if it's already expanded
+                newExpandedIds = prev.filter(id => id !== workspaceId);
+            } else {
+                // Add the workspace ID if it's not expanded
+                newExpandedIds = [...prev, workspaceId];
+            }
+
+            // Store in localStorage
+            localStorage.setItem('expandedWorkspaceIds', JSON.stringify(newExpandedIds));
+
+            return newExpandedIds;
+        });
     };
 
     return (
@@ -89,9 +110,9 @@ const Sidebar = () => {
                                 'flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#A6C5E229] font-medium rounded-lg transition-colors duration-200',
                                 {
                                     'text-[#155DFC] bg-[#1C2B41]':
-                                    item.navigate === location.pathname,
-                                    'text-white' : 
-                                    item.navigate !== location.pathname,
+                                        item.navigate === location.pathname,
+                                    'text-white':
+                                        item.navigate !== location.pathname,
                                 }
                             )}
                         >
@@ -111,9 +132,9 @@ const Sidebar = () => {
                     {workspaces.map(workspace => (
                         <div className='space-y-1 mb-2' key={workspace.id}>
                             {/* Workspace Header */}
-                            <div 
+                            <div
                                 className='flex items-center justify-between p-2 hover:bg-[#A6C5E229] rounded-lg cursor-pointer transition-colors duration-200'
-                                onClick={() => toggleWorkspace(workspace.id)}
+                                onClick={() => handleExpandWorkspace(workspace.id)}
                             >
                                 <div className='flex items-center'>
                                     <div className='w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-black font-semibold text-sm mr-3'>
@@ -124,7 +145,7 @@ const Sidebar = () => {
                                     </span>
                                 </div>
                                 <div className='transition-transform duration-200'>
-                                    {workspace.isExpanded ? (
+                                    {expandedWorkspaceIds.includes(workspace.id) ? (
                                         <ChevronDown className='w-4 h-4 text-gray-400' />
                                     ) : (
                                         <ChevronRight className='w-4 h-4 text-gray-400' />
@@ -133,11 +154,11 @@ const Sidebar = () => {
                             </div>
 
                             {/* Workspace Submenu with Animation */}
-                            <div 
+                            <div
                                 className={clsx(
                                     'overflow-hidden transition-all duration-300 ease-in-out',
-                                    workspace.isExpanded 
-                                        ? 'max-h-32 opacity-100' 
+                                    expandedWorkspaceIds.includes(workspace.id)
+                                        ? 'max-h-32 opacity-100'
                                         : 'max-h-0 opacity-0'
                                 )}
                             >

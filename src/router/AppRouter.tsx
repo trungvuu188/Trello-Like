@@ -15,13 +15,14 @@ import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback';
 import LoginForm from '@/components/auth/LoginForm';
 import AuthLayout from '@/components/layout/AuthLayout';
 import RegisterForm from '@/components/auth/RegisterForm';
-import Board from '@/pages/workspace/Board';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import Boards from '@/pages/Boards';
 import Template from '@/pages/Template';
 import Home from '@/pages/Home';
 import Member from '@/pages/workspace/Member';
 import Setting from '@/pages/workspace/Setting';
+import WorkspaceBoard from '@/pages/WorkspaceBoard';
+import HomeBoards from '@/pages/HomeBoards';
+import Boards from '@/pages/workspace/Board';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -84,7 +85,7 @@ const router = createBrowserRouter([
                 children: [
                     {
                         path: 'boards',
-                        element: <Boards />,
+                        element: <HomeBoards />,
                     },
                     {
                         path: 'templates',
@@ -97,14 +98,19 @@ const router = createBrowserRouter([
                 ]
             },
             {
+                path: 'board',
+                element: <WorkspaceBoard />,
+            },
+            {
                 path: 'workspace',
+                element: <SidebarLayout />,
                 children: [
                     {
-                        path: 'board',
-                        element: <Board />,
+                        path: 'boards',
+                        element: <Boards />,
                     },
                     {
-                        path: 'member',
+                        path: 'members',
                         element: <Member />,
                     },
                     {

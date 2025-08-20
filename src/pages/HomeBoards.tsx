@@ -66,7 +66,7 @@ const workspaceBoards: Board[] = [
     },
 ];
 
-const Boards = () => {
+const HomeBoards = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     
         return (
@@ -285,4 +285,4 @@ const Boards = () => {
         );
 }
 
-export default Boards;
+export default HomeBoards;
