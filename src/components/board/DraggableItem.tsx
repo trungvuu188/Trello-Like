@@ -39,6 +39,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({ item, onDelete, handleSho
             {...attributes}
             {...listeners}
             onClick={handleShowDetailTask}
+
             className={`
                 select-none bg-[#222f44] p-3 rounded-lg 
                 shadow-sm cursor-grab hover:shadow-md 
