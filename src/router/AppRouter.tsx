@@ -24,6 +24,9 @@ import WorkspaceBoard from '@/pages/WorkspaceBoard';
 import HomeBoards from '@/pages/HomeBoards';
 import Boards from '@/pages/workspace/Board';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
+import WorkspaceBoard from '@/pages/WorkspaceBoard';
+import HomeBoards from '@/pages/HomeBoards';
+import Boards from '@/pages/workspace/Board';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (

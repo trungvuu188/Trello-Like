@@ -20,9 +20,8 @@ const CreateBoard = () => {
     const [boardTitle, setBoardTitle] = useState('');
     const [selectedBackground, setSelectedBackground] = useState(0);
 
-    const handleCreateBoard = async () => {
+    const handleCreateBoard = () => {
         if (boardTitle.trim()) {
-            // await createBoard()
             setShowCreateModal(false);
             setBoardTitle('');
             setSelectedBackground(0);

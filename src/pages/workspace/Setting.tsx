@@ -40,7 +40,6 @@ const Setting = () => {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-2xl font-semibold mb-6">Workspace settings</h1>
-
                 {/* Workspace Info */}
                 <div className="flex items-center mb-8">
                     <div className="w-12 h-12 bg-orange-500 rounded flex items-center justify-center text-black font-bold text-xl mr-4">
