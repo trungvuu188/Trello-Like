@@ -1,4 +1,4 @@
-import { createBoard } from '@/services/boardService';
+import { createBoard } from '@/services/workspaceService';
 import { TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,14 +14,23 @@ const backgroundOptions = [
     { type: 'color', color: 'bg-pink-400' }
 ];
 
-const CreateBoard = () => {
+type CreateBoardProp = {
+  id: number | null; 
+  onBoardCreated?: () => void;
+};
+
+const CreateBoard: React.FC<CreateBoardProp> = ({ id, onBoardCreated }) => {
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [boardTitle, setBoardTitle] = useState('');
     const [selectedBackground, setSelectedBackground] = useState(0);
 
-    const handleCreateBoard = () => {
+    const handleCreateBoard = async () => {
+        if(!id) return;
         if (boardTitle.trim()) {
+            await createBoard(boardTitle, id)
+            .then(data => onBoardCreated?.())
+            .catch(err => console.log(err))
             setShowCreateModal(false);
             setBoardTitle('');
             setSelectedBackground(0);

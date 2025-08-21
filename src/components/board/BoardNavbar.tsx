@@ -1,28 +1,29 @@
-import { Activity, Copy, EarthIcon, Eye, Folder, Image, Settings, Tag, Users, X, type Earth } from 'lucide-react';
-import React, { useState } from 'react';
+import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
+import { useState } from 'react';
+
+const menuItems = [
+    { icon: <Users />, label: "Share", color: "text-gray-300" },
+    { icon: <EarthIcon />, label: "Visibility: Workspace", color: "text-gray-300" },
+    { icon: <Settings />, label: "Settings", color: "text-gray-300" },
+    { icon: <Image />, label: "Change background", color: "text-gray-300" },
+];
+
+const powerUpItems = [
+    { icon: <Tag />, label: "Labels", color: "text-gray-300" },
+    { icon: <Activity />, label: "Activity", color: "text-gray-300" },
+    { icon: <Folder />, label: "Archived items", color: "text-gray-300" },
+];
+
+const moreItems = [
+    { icon: <Eye />, label: "Watch", color: "text-gray-300" },
+    { icon: <Copy />, label: "Copy board", color: "text-gray-300" },
+    { icon: <X />, label: "Close board", color: "text-red-400" },
+];
 
 const BoardNavbar = () => {
 
     const [showMenu, setShowMenu] = useState(false);
-
-    const menuItems = [
-        { icon: <Users />, label: "Share", color: "text-gray-300" },
-        { icon: <EarthIcon />, label: "Visibility: Workspace", color: "text-gray-300" },
-        { icon: <Settings />, label: "Settings", color: "text-gray-300" },
-        { icon: <Image />, label: "Change background", color: "text-gray-300" },
-    ];
-
-    const powerUpItems = [
-        { icon: <Tag />, label: "Labels", color: "text-gray-300" },
-        { icon: <Activity />, label: "Activity", color: "text-gray-300" },
-        { icon: <Folder />, label: "Archived items", color: "text-gray-300" },
-    ];
-
-    const moreItems = [
-        { icon: <Eye />, label: "Watch", color: "text-gray-300" },
-        { icon: <Copy />, label: "Copy board", color: "text-gray-300" },
-        { icon: <X />, label: "Close board", color: "text-red-400" },
-    ];
+    const [showVisibility, setShowVisibility] = useState(false);
 
     return (
         <div className='h-[50px] flex items-center justify-between bg-[#28303E] p-4'>
@@ -30,14 +31,19 @@ const BoardNavbar = () => {
                 Smart TaskHub
             </h1>
             {/* Folder Menu Button */}
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+                <button
+                    onClick={() => setShowVisibility(!showVisibility)}
+                    className="flex items-center justify-center w-8 h-8 text-white hover:bg-[#3A4150] rounded transition-colors"
+                >
+                    <Globe className="w-5 h-5" />
+                </button>
+
                 <button
                     onClick={() => setShowMenu(!showMenu)}
                     className="flex items-center justify-center w-8 h-8 text-white hover:bg-[#3A4150] rounded transition-colors"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
+                    <Menu className="w-5 h-5" />
                 </button>
 
                 {/* Menu Modal */}
@@ -117,6 +123,58 @@ const BoardNavbar = () => {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Visibility Popup */}
+                {showVisibility && (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowVisibility(false)}
+                        />
+                        <div className="absolute right-0 top-12 w-72 bg-[#1F2532] text-white rounded-lg shadow-lg p-4 z-50">
+                            <h2 className="text-lg font-semibold mb-2">Change visibility</h2>
+                            <ul className="space-y-3 text-sm">
+                                <li className="flex items-start space-x-2 cursor-pointer hover:bg-[#3A4150] p-2 rounded">
+                                    <span>🔒</span>
+                                    <div>
+                                        <p className="font-medium">Private</p>
+                                        <p className="text-gray-400 text-xs">
+                                            Only board members can see this board.
+                                        </p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start space-x-2 cursor-pointer hover:bg-[#3A4150] p-2 rounded">
+                                    <span>👥</span>
+                                    <div>
+                                        <p className="font-medium">Workspace</p>
+                                        <p className="text-gray-400 text-xs">
+                                            All workspace members can see and edit.
+                                        </p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start space-x-2 cursor-pointer hover:bg-[#3A4150] p-2 rounded">
+                                    <span>🏢</span>
+                                    <div>
+                                        <p className="font-medium">Organization</p>
+                                        <p className="text-gray-400 text-xs">
+                                            All org members can see this board.
+                                        </p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start space-x-2 cursor-pointer hover:bg-[#3A4150] p-2 rounded">
+                                    <span>🌍</span>
+                                    <div>
+                                        <p className="font-medium">Public</p>
+                                        <p className="text-gray-400 text-xs">
+                                            Anyone on the internet can see this board.
+                                        </p>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </>
                 )}

@@ -1,5 +1,5 @@
-export interface ProjectCreateRequest {
-    workspaceId: number;
+export interface Board {
+    id: number;
     name: string;
     visibility?: string
 }

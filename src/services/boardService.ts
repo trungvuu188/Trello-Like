@@ -1,8 +1,7 @@
-import type { ApiResponse, UrlPreviewData } from '@/types';
+import type { UrlPreviewData } from '@/types';
 import axiosClients from './axiosClient';
 
 const previewUrl = '/url-preview';
-const projectUrl = '/projects'
 
 
 const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
@@ -13,16 +12,4 @@ const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
     });
 };
 
-const createBoard = async (
-    name: string,
-    workspaceId: number,
-    visibility?: string
-): Promise<ApiResponse<null>> => {
-    return axiosClients.post(`${projectUrl}`, {
-        name,
-        workspaceId,
-        visibility
-    });
-};
-
-export { fetchUrlPreview, createBoard };
+export { fetchUrlPreview };

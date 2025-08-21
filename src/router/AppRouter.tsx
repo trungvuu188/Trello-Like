@@ -114,7 +114,7 @@ const router = createBrowserRouter([
                 element: <SidebarLayout />,
                 children: [
                     {
-                        path: 'boards',
+                        path: 'boards/:id',
                         element: <Boards />,
                     },
                     {
@@ -135,6 +135,10 @@ const router = createBrowserRouter([
     {
         path: '/unauthorized',
         element: <UnauthorizedFallback />,
+    },
+    {
+        path: '/not-found',
+        element: <NotFound />,
     },
     {
         path: '*',

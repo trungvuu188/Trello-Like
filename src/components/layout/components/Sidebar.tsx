@@ -3,7 +3,7 @@ import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
 import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const navigationItems = [
     {
@@ -167,7 +167,7 @@ const Sidebar = () => {
                                         workspaceItems.map(item => (
                                             <Link
                                                 key={item.id}
-                                                to={item.navigate}
+                                                to={`${item.navigate}/${workspace.id}`}
                                                 className='flex items-center gap-2 pl-11 block px-3 py-1.5 text-xs text-white hover:bg-[#A6C5E229] rounded transition-colors duration-200'
 
                                             >
