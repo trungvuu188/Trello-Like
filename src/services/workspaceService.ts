@@ -59,4 +59,4 @@ const createBoard = async (
     });
 };
 
-export { getWorkspaces, getWorkspaceById, deleteWorkspace, getBoards, createBoard };
+export { getWorkspaces, createWorkspace, updateWorkspace, getWorkspaceById, deleteWorkspace, getBoards, createBoard };

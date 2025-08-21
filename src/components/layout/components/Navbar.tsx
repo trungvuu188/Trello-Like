@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import CreateWorkspaceModal from '@/components/shared/CreateModal';
-import workspaceService from '@/services/workspaceService';
+import { createWorkspace } from '@/services/workspaceService';
 
 interface ProfileDropdownProps {
     userName?: string;
@@ -139,7 +139,7 @@ const Navbar: React.FC = () => {
     };
 
     const handleWorkspaceSubmit = async (workspaceData: any) => {
-        await workspaceService.createWorkspace(
+        await createWorkspace(
             workspaceData.name,
             workspaceData.description
         );

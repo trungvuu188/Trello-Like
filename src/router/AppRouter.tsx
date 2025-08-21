@@ -24,9 +24,6 @@ import WorkspaceBoard from '@/pages/WorkspaceBoard';
 import HomeBoards from '@/pages/HomeBoards';
 import Boards from '@/pages/workspace/Board';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
-import WorkspaceBoard from '@/pages/WorkspaceBoard';
-import HomeBoards from '@/pages/HomeBoards';
-import Boards from '@/pages/workspace/Board';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -118,11 +115,11 @@ const router = createBrowserRouter([
                         element: <Boards />,
                     },
                     {
-                        path: 'members',
+                        path: 'members/:id',
                         element: <Member />,
                     },
                     {
-                        path: 'setting',
+                        path: 'setting/:id',
                         element: <Setting />,
                     },
                     

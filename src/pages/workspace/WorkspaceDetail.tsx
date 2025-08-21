@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import workspaceService from '@/services/workspaceService';
+import { updateWorkspace } from '@/services/workspaceService';
 import { Pencil, Users } from 'lucide-react';
 import { useState, type SetStateAction } from 'react';
 
@@ -35,7 +35,7 @@ const WorkspaceDetail = () => {
     // Handle form submission logic here
     console.log('Workspace updated:', { name: workspaceName, description: workspaceDescription });
     try {
-      await workspaceService.updateWorkspace(
+      await updateWorkspace(
         workspace.id,
         workspaceName,
         workspaceDescription || null
