@@ -1,3 +1,4 @@
+import { createBoard } from '@/services/boardService';
 import { TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,8 +20,9 @@ const CreateBoard = () => {
     const [boardTitle, setBoardTitle] = useState('');
     const [selectedBackground, setSelectedBackground] = useState(0);
 
-    const handleCreateBoard = () => {
+    const handleCreateBoard = async () => {
         if (boardTitle.trim()) {
+            // await createBoard()
             setShowCreateModal(false);
             setBoardTitle('');
             setSelectedBackground(0);

@@ -1,14 +1,28 @@
-import type { UrlPreviewData } from '@/types';
+import type { ApiResponse, UrlPreviewData } from '@/types';
 import axiosClients from './axiosClient';
 
-const baseUrl = '/url-preview';
+const previewUrl = '/url-preview';
+const projectUrl = '/projects'
+
 
 const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
-    return axiosClients.get(`${baseUrl}`, {
+    return axiosClients.get(`${previewUrl}`, {
         params: {
             url,
         },
     });
 };
 
-export { fetchUrlPreview };
+const createBoard = async (
+    name: string,
+    workspaceId: number,
+    visibility?: string
+): Promise<ApiResponse<null>> => {
+    return axiosClients.post(`${projectUrl}`, {
+        name,
+        workspaceId,
+        visibility
+    });
+};
+
+export { fetchUrlPreview, createBoard };

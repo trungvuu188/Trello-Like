@@ -1,3 +1,4 @@
+import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import type { Column, Item } from '@/types';
@@ -473,12 +474,8 @@ const WorkspaceBoard = () => {
 
     return (
         <div className='bg-[#283449] w-full h-full flex flex-col'>
-            <div className='h-[50px] flex items-center bg-[#28303E] p-4'>
-                <h1 className='text-xl font-bold text-white mb-2'>
-                    Smart TaskHub
-                </h1>
-            </div>
-            <div className='grow overflow-hidden'>
+            <BoardNavbar />
+            {/* <div className='grow overflow-hidden'>
                 <DndContext
                     sensors={sensors}
                     collisionDetection={pointerWithin}
@@ -546,7 +543,7 @@ const WorkspaceBoard = () => {
                         ) : null}
                     </DragOverlay>
                 </DndContext>
-            </div>
+            </div> */}
             <TaskDetailModal
                 isOpen={showDetailModal}
                 onClose={handleHideDetailModal}
