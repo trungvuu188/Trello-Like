@@ -1,5 +1,7 @@
+import { completedBoard } from '@/services/workspaceService';
 import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const menuItems = [
     { icon: <Users />, label: "Share", color: "text-gray-300" },
@@ -15,15 +17,35 @@ const powerUpItems = [
 ];
 
 const moreItems = [
-    { icon: <Eye />, label: "Watch", color: "text-gray-300" },
-    { icon: <Copy />, label: "Copy board", color: "text-gray-300" },
-    { icon: <X />, label: "Close board", color: "text-red-400" },
+    { icon: <Eye />, label: "Watch", color: "text-gray-300"},
+    { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
 ];
 
 const BoardNavbar = () => {
 
+    const { id } = useParams();
+    const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
+    const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+
+    const handleCloseMenu = () => {
+        setShowCloseConfirm(false);
+        setShowMenu(false);
+    };
+
+    console.log(id);
+
+    const confirmCloseBoard = async () => {
+        if(!id) return;
+        await completedBoard(Number(id));
+        handleCloseMenu();
+        navigate(`/workspace/boards/${id}`)
+    };
+
+    const cancelCloseBoard = () => {
+        setShowCloseConfirm(false);
+    };
 
     return (
         <div className='h-[50px] flex items-center justify-between bg-[#28303E] p-4'>
@@ -52,7 +74,7 @@ const BoardNavbar = () => {
                         {/* Backdrop */}
                         <div
                             className="fixed inset-0 z-40"
-                            onClick={() => setShowMenu(false)}
+                            onClick={handleCloseMenu}
                         />
 
                         {/* Menu */}
@@ -122,6 +144,48 @@ const BoardNavbar = () => {
                                         </div>
                                     </button>
                                 ))}
+                                {/* Close Board Item - Separate with relative positioning for popup */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowCloseConfirm(true)}
+                                        className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                    >
+                                        <span className="mr-3 text-base text-white"><X /></span>
+                                        <div className="flex-1">
+                                            <div className="text-red-400">
+                                                Close board
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    {/* Close Board Confirmation Popup - Positioned above the button */}
+                                    {showCloseConfirm && (
+                                        <>
+                                            {/* Confirmation Popup */}
+                                            <div className="absolute bottom-full right-0 bg-[#1a1a1a] rounded p-3">
+                                                <div className="flex items-center justify-between pb-2 border-b border-gray-600">
+                                                    <h3 className="text-white font-semibold text-sm">Close board?</h3>
+                                                    <button
+                                                        onClick={cancelCloseBoard}
+                                                        className="text-gray-400 hover:text-white transition-colors rounded"
+                                                    >
+                                                        <X className="w-4 h-4 cursor-pointer" />
+                                                    </button>
+                                                </div>
+                                                <p className="text-gray-300 text-xs mb-3 pt-2 leading-relaxed">
+                                                    You can find and reopen closed boards at the bottom of{' '}
+                                                    <span className="text-blue-400 underline cursor-pointer">your boards page</span>.
+                                                </p>
+                                                <button
+                                                    onClick={confirmCloseBoard}
+                                                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm font-medium transition-colors"
+                                                >
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </>
@@ -178,6 +242,7 @@ const BoardNavbar = () => {
                         </div>
                     </>
                 )}
+
             </div>
         </div>
     );

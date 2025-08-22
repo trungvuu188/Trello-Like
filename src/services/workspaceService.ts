@@ -59,4 +59,20 @@ const createBoard = async (
     });
 };
 
-export { getWorkspaces, createWorkspace, updateWorkspace, getWorkspaceById, deleteWorkspace, getBoards, createBoard };
+const completedBoard = async (id: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/complete`);
+};
+
+const reopenBoard = async (id: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/reopen`);
+};
+
+const deleteBoard = async (id: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/delete`);
+};
+
+const getClosedBoards = async (): Promise<ApiResponse<WorkSpace[]>> => {
+    return axiosClients.get(`${baseUrl + projectUrl}/deleted`);
+};
+
+export { getWorkspaces, createWorkspace, updateWorkspace, getWorkspaceById, deleteWorkspace, getBoards, createBoard, completedBoard, reopenBoard, deleteBoard, getClosedBoards };

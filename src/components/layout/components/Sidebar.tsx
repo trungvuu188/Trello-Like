@@ -2,8 +2,8 @@ import { getWorkspaces } from '@/services/workspaceService';
 import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
 import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const navigationItems = [
     {
@@ -61,7 +61,7 @@ const Sidebar = () => {
             .catch(err => console.log(err))
     }
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         // Load expanded workspace IDs from localStorage
         const saved = localStorage.getItem('expandedWorkspaceIds');
         if (saved) {
@@ -78,7 +78,8 @@ const Sidebar = () => {
         fetchWorkspaces()
     }, []);
 
-    const handleExpandWorkspace = (workspaceId: number) => {
+    const handleExpandWorkspace = (workspaceId: number | undefined) => {
+        if(!workspaceId) return;
         setExpandedWorkspaceIds(prev => {
             let newExpandedIds;
 
@@ -145,7 +146,7 @@ const Sidebar = () => {
                                     </span>
                                 </div>
                                 <div className='transition-transform duration-200'>
-                                    {expandedWorkspaceIds.includes(workspace.id) ? (
+                                    {workspace.id && expandedWorkspaceIds.includes(workspace.id) ? (
                                         <ChevronDown className='w-4 h-4 text-gray-400' />
                                     ) : (
                                         <ChevronRight className='w-4 h-4 text-gray-400' />
@@ -157,7 +158,7 @@ const Sidebar = () => {
                             <div
                                 className={clsx(
                                     'overflow-hidden transition-all duration-300 ease-in-out',
-                                    expandedWorkspaceIds.includes(workspace.id)
+                                    workspace.id && expandedWorkspaceIds.includes(workspace.id)
                                         ? 'max-h-32 opacity-100'
                                         : 'max-h-0 opacity-0'
                                 )}

@@ -1,14 +1,32 @@
-import { deleteWorkspace } from "@/services/workspaceService";
+import { deleteWorkspace, getWorkspaceById } from "@/services/workspaceService";
+import type { WorkSpace } from "@/types/workspace";
 import { EarthIcon, LockKeyhole } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Setting = () => {
 
-
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [workspaceData, setWorkSpaceData] = useState<WorkSpace>({
+        id: id ? Number.parseInt(id) : undefined,
+        name: '',
+        desc: '',
+    });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteInputValue, setDeleteInputValue] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedVisibility, setSelectedVisibility] = useState("private");
+
+    const fetchWorkspaceDetail = async () => {
+        if (!id) return;
+        await getWorkspaceById(Number(id))
+            .then(data => {
+                if (!data?.data) throw new Error("Workspace not found");
+                setWorkSpaceData(data.data);
+            })
+            .catch(_ => navigate('/not-found'));
+    };
 
     const handleSave = () => {
         console.log("Selected visibility:", selectedVisibility);
@@ -20,10 +38,11 @@ const Setting = () => {
     };
 
     const handleDeleteConfirm = async () => {
-        if (deleteInputValue.toLowerCase() === 'nashtech') {
+        if (!id) return;
+        if (deleteInputValue === workspaceData.name) {
             setShowDeleteModal(false);
             setDeleteInputValue('');
-            await deleteWorkspace(1);
+            // await deleteWorkspace(Number(id));
         }
     };
 
@@ -31,6 +50,10 @@ const Setting = () => {
         setShowDeleteModal(false);
         setDeleteInputValue('');
     };
+
+    useLayoutEffect(() => {
+        fetchWorkspaceDetail();
+    }, [id]);
 
     return (
         <div className="
@@ -43,11 +66,11 @@ const Setting = () => {
                 {/* Workspace Info */}
                 <div className="flex items-center mb-8">
                     <div className="w-12 h-12 bg-orange-500 rounded flex items-center justify-center text-black font-bold text-xl mr-4">
-                        N
+                        {workspaceData.name.charAt(0)}
                     </div>
                     <div>
-                        <h2 className="text-lg font-medium">Nashtech</h2>
-                        <span className="text-sm text-gray-400">🔒 Private</span>
+                        <h2 className="text-lg font-medium">{workspaceData.name}</h2>
+                        <span className="text-sm text-gray-400">{workspaceData.desc}</span>
                     </div>
                 </div>
             </div>
@@ -186,7 +209,7 @@ const Setting = () => {
 
                             <div className="mb-6">
                                 <p className="text-sm text-gray-300 mb-4">
-                                    Enter the Workspace name <strong>"Nashtech"</strong> to delete:
+                                    Enter the Workspace name <strong>"{workspaceData.name}"</strong> to delete:
                                 </p>
 
                                 <div className="mb-4">
@@ -214,8 +237,8 @@ const Setting = () => {
                             <div className="flex justify-end space-x-3">
                                 <button
                                     onClick={handleDeleteConfirm}
-                                    disabled={deleteInputValue.toLowerCase() !== 'nashtech'}
-                                    className={`px-4 py-2 text-sm rounded font-medium ${deleteInputValue.toLowerCase() === 'nashtech'
+                                    disabled={deleteInputValue !== workspaceData.name}
+                                    className={`px-4 py-2 text-sm rounded font-medium ${deleteInputValue === workspaceData.name
                                         ? 'bg-red-600 hover:bg-red-700 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
