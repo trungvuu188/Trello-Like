@@ -1,4 +1,4 @@
-import { deleteWorkspace, getWorkspaceById } from "@/services/workspaceService";
+import { getWorkspaceById } from "@/services/workspaceService";
 import type { WorkSpace } from "@/types/workspace";
 import { EarthIcon, LockKeyhole } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
@@ -9,7 +9,7 @@ const Setting = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [workspaceData, setWorkSpaceData] = useState<WorkSpace>({
-        id: id ? Number.parseInt(id) : undefined,
+        id: Number(id),
         name: '',
         desc: '',
     });
