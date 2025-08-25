@@ -23,7 +23,8 @@ const moreItems = [
 
 const BoardNavbar = () => {
 
-    const { id } = useParams();
+    const { wsId, boardId } = useParams();
+    
     const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
@@ -34,13 +35,11 @@ const BoardNavbar = () => {
         setShowMenu(false);
     };
 
-    console.log(id);
-
     const confirmCloseBoard = async () => {
-        if(!id) return;
-        await completedBoard(Number(id));
+        if(!boardId) return;
+        await completedBoard(Number(boardId));
         handleCloseMenu();
-        navigate(`/workspace/boards/${id}`)
+        navigate(`/workspace/boards/${wsId}`)
     };
 
     const cancelCloseBoard = () => {
@@ -54,12 +53,12 @@ const BoardNavbar = () => {
             </h1>
             {/* Folder Menu Button */}
             <div className="relative flex items-center gap-2">
-                <button
+                {/* <button
                     onClick={() => setShowVisibility(!showVisibility)}
                     className="flex items-center justify-center w-8 h-8 text-white hover:bg-[#3A4150] rounded transition-colors"
                 >
                     <Globe className="w-5 h-5" />
-                </button>
+                </button> */}
 
                 <button
                     onClick={() => setShowMenu(!showMenu)}
@@ -95,7 +94,7 @@ const BoardNavbar = () => {
                             {/* Menu Content */}
                             <div className="p-2">
                                 {/* Main Menu Items */}
-                                {menuItems.map((item, index) => (
+                                {/* {menuItems.map((item, index) => (
                                     <button
                                         key={index}
                                         className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
@@ -107,13 +106,13 @@ const BoardNavbar = () => {
                                             </div>
                                         </div>
                                     </button>
-                                ))}
+                                ))} */}
 
                                 {/* Divider */}
                                 <div className="border-t border-gray-600 my-2"></div>
 
                                 {/* Power-Ups Section */}
-                                {powerUpItems.map((item, index) => (
+                                {/* {powerUpItems.map((item, index) => (
                                     <button
                                         key={index}
                                         className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
@@ -125,13 +124,13 @@ const BoardNavbar = () => {
                                             </div>
                                         </div>
                                     </button>
-                                ))}
+                                ))} */}
 
                                 {/* Divider */}
                                 <div className="border-t border-gray-600 my-2"></div>
 
                                 {/* More Items */}
-                                {moreItems.map((item, index) => (
+                                {/* {moreItems.map((item, index) => (
                                     <button
                                         key={index}
                                         className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
@@ -143,7 +142,7 @@ const BoardNavbar = () => {
                                             </div>
                                         </div>
                                     </button>
-                                ))}
+                                ))} */}
                                 {/* Close Board Item - Separate with relative positioning for popup */}
                                 <div className="relative">
                                     <button

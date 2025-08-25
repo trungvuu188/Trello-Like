@@ -1,5 +1,5 @@
 export interface WorkSpace {
-    id: number | undefined;
+    id: number;
     name: string;
     desc?: string;
 };

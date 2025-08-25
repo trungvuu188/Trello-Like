@@ -1,9 +1,9 @@
+import ClosedBoards from "@/components/board/ClosedBoards";
 import CreateBoard from "@/components/shared/CreateBoard";
-import LoadingContent from "@/components/ui/LoadingContent";
-import { deleteBoard, getBoards, getClosedBoards, getWorkspaceById, reopenBoard, updateWorkspace } from "@/services/workspaceService";
+import { getBoards, getWorkspaceById, updateWorkspace } from "@/services/workspaceService";
 import type { Board } from "@/types/project";
 import type { WorkSpace } from "@/types/workspace";
-import { Folder, Pencil, RotateCcw, Trash2, X } from "lucide-react";
+import { Pencil, Users } from "lucide-react";
 import { useEffect, useState, type SetStateAction } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -14,22 +14,16 @@ const Boards = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [workspaceData, setWorkSpaceData] = useState<WorkSpace>({
-        id: id ? Number.parseInt(id) : undefined,
+        id: Number(id),
         name: '',
         desc: '',
     });
     const [workspaceEditData, setWorkspaceEditData] = useState<WorkSpace>(workspaceData);
     const [boards, setBoards] = useState<Board[]>([]);
-    const [closedBoards, setClosedBoards] = useState<WorkSpace[]>([]);
     const [isEditingWorkspace, setIsEditingWorkspace] = useState(false);
     const [workspaceNameError, setWorkspaceNameError] = useState('');
     const [workspaceDescriptionError, setWorkspaceDescriptionError] = useState('');
     const [showClosedBoards, setShowClosedBoards] = useState(false);
-    const [loadingClosedModal, setLoadingClosedModal] = useState(false);
-    const [loadingDeleteConfirmModal, setLoadingDeleteConfirmModal] = useState(false);
-    const [loadingReopenConfirmModal, setLoadingReopenConfirmModal] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [showReopenConfirm, setShowReopenConfirm] = useState(false);
 
     const isWorkspaceChanged = (
         original: WorkSpace,
@@ -41,8 +35,8 @@ const Boards = () => {
         );
     };
 
-    const handleBoardNavigate = (id: number) => {
-        navigate(`/board/${id}`)
+    const handleBoardNavigate = (boardId: number) => {
+        navigate(`/workspace/${id}/board/${boardId}`, { replace: true });
     };
 
     const onEditingButtonClick = () => {
@@ -98,45 +92,6 @@ const Boards = () => {
                 data?.data && setBoards(data.data);
             })
             .catch(err => console.log(err))
-    };
-
-    const fetchClosedBoards = async () => {
-        setShowClosedBoards(true);
-        setLoadingClosedModal(true);
-        setTimeout( async () => {
-            await getClosedBoards()
-            .then(data => {
-                    data?.data && setClosedBoards(data.data)
-                    setLoadingClosedModal(false);
-                })
-                .catch(err => console.log(err))
-        }, 2000)
-    };
-
-    const handleReopenBoard = async (boardId: number | undefined) => {
-        if(!boardId) return;
-        setLoadingReopenConfirmModal(true);
-        await reopenBoard(boardId);
-        setLoadingReopenConfirmModal(false);
-        cancelAction();
-    };
-
-    const handleDeleteBoard = async (boardId: number | undefined) => {
-        if(!boardId) return;
-        setLoadingDeleteConfirmModal(true);
-        await deleteBoard(boardId);
-        setLoadingDeleteConfirmModal(false);
-        cancelAction();
-    };
-
-    const cancelAction = () => {
-        setShowClosedBoards(false);
-        setShowDeleteConfirm(false);
-        setShowReopenConfirm(false);
-    };
-
-    const preventPropagation = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.stopPropagation();
     };
 
     useEffect(() => {
@@ -218,7 +173,7 @@ const Boards = () => {
                 {/* Your boards section */}
                 <div>
                     <div className="flex items-center mb-6">
-                        <span className="mr-2">👤</span>
+                        <Users className="mr-2" />
                         <h2 className="text-lg font-medium">Your boards</h2>
                     </div>
 
@@ -246,195 +201,26 @@ const Boards = () => {
 
                         {/* Create new board button */}
                         <CreateBoard
-                            id={id ? Number.parseInt(id) : null}
+                            id={id ? Number(id) : null}
+                            workspaceName={workspaceData.name}
                             onBoardCreated={fetchBoards}
                         />
                     </div>
 
                     {/* View closed boards button */}
                     <button
-                        onClick={fetchClosedBoards}
+                        onClick={() => setShowClosedBoards(true)}
                         className="mt-6 p-2 rounded bg-[#A1BDD914] hover:bg-[#BFDBF847] text-gray-300 cursor-pointer font-bold text-sm transition-colors"
                     >
                         View closed boards
                     </button>
 
                     {/* Closed Boards Modal */}
-                    {showClosedBoards && (
-                        <>
-                            {/* Backdrop */}
-                            <div
-                                className="fixed inset-0 bg-black/50 z-50"
-                                onClick={cancelAction}
-                            />
-
-                            {/* Modal */}
-                            <div className="fixed top-0 left-[50%] -translate-x-[50%] w-[768px] flex items-center justify-center z-50 p-4">
-                                <div className="bg-[#2c3440] rounded-lg shadow-xl w-full max-w-2xl border border-gray-600">
-                                    {/* Modal Header */}
-                                    <div className="flex items-center justify-between p-4 border-b border-gray-600">
-                                        <div className="flex items-center space-x-2">
-                                            <Folder className="w-5 h-5 text-gray-300" />
-                                            <h2 className="text-white font-medium text-lg">Closed boards</h2>
-                                        </div>
-                                        <button
-                                            onClick={() => setShowClosedBoards(false)}
-                                            className="text-gray-400 hover:text-white cursor-pointer transition-colors p-1 rounded"
-                                        >
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-
-                                    {/* Modal Body */}
-                                    <div className="p-4 max-h-96">
-                                        {
-                                        loadingClosedModal ? 
-                                        <LoadingContent /> : 
-                                        closedBoards.length === 0 ? (
-                                            <div className="text-center py-8">
-                                                <p className="text-gray-400">No closed boards found</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {closedBoards.map((board) => (
-                                                    <div
-                                                        key={board.id}
-                                                        className="flex items-center justify-between p-3 bg-[#1e2328] rounded-lg hover:bg-[#252a30] transition-colors"
-                                                    >
-                                                        <div className="flex items-center space-x-3">
-                                                            {/* Board Thumbnail */}
-                                                            <div className="w-12 h-8 rounded bg-gray-600 overflow-hidden flex-shrink-0">
-                                                                <img
-                                                                    src={backgroundImage}
-                                                                    alt={board.name}
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            </div>
-
-                                                            {/* Board Info */}
-                                                            <div>
-                                                                <h3 className="text-blue-400 font-medium text-sm hover:underline cursor-pointer">
-                                                                    {board.name}
-                                                                </h3>
-                                                                <p className="text-gray-400 text-xs">
-                                                                    {board.desc}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Action Buttons */}
-                                                        <div className="flex items-center space-x-2">
-                                                            <div
-                                                                onClick={() => {
-                                                                    setShowDeleteConfirm(false);
-                                                                    setShowReopenConfirm(true);
-                                                                }}
-                                                                className="relative flex items-center cursor-pointer gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-                                                            >
-                                                                <RotateCcw className="w-3 h-3" />
-                                                                <span>Reopen</span>
-                                                                {/* Reopen Confirmation Modal */}
-                                                                {showReopenConfirm && (
-                                                                    <>
-                                                                        {/* Reopen Confirmation Modal */}
-                                                                        <div className="absolute top-full left-[50%] -translate-x-[50%] flex items-center justify-center z-60 p-4">
-                                                                            <div className="bg-[#2c3440] rounded-lg shadow-xl w-full max-w-sm border border-gray-600">
-                                                                                {/* Modal Header */}
-                                                                                <div className="flex items-center w-[300px] justify-between p-4 border-b border-gray-600">
-                                                                                    <h2 className="text-white font-medium">Reopen board?</h2>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            preventPropagation(e);
-                                                                                            setShowReopenConfirm(false);
-                                                                                        }}
-                                                                                        className="text-gray-400 hover:text-white transition-colors p-1 rounded"
-                                                                                    >
-                                                                                        <X className="w-4 h-4" />
-                                                                                    </button>
-                                                                                </div>
-
-                                                                                {/* Modal Body */}
-                                                                                <div className="p-4">
-                                                                                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                                                                                        This board will be reopened and moved back to your active boards. You can close it again at any time.
-                                                                                    </p>
-                                                                                    
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            preventPropagation(e);
-                                                                                            handleReopenBoard(board.id);
-                                                                                        }}
-                                                                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium transition-colors"
-                                                                                    >
-                                                                                        { loadingReopenConfirmModal ? <LoadingContent /> : 'Reopen'}
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                            </div>
-
-                                                            <div
-                                                                onClick={() => {
-                                                                    setShowReopenConfirm(false);
-                                                                    setShowDeleteConfirm(true);
-                                                                }}
-                                                                className="relative flex items-center gap-2 cursor-pointer px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
-                                                            >
-                                                                <Trash2 className="w-3 h-3 shrink-0" />
-                                                                <span>Delete</span>
-                                                                {/* Delete Confirmation Modal */}
-                                                                {showDeleteConfirm && (
-                                                                    <>
-                                                                        {/* Delete Confirmation Modal */}
-                                                                        <div className="absolute top-full left-[50%] -translate-x-[50%] flex items-center justify-center z-60 p-4">
-                                                                            <div className="bg-[#2c3440] rounded-lg shadow-xl w-[300px] border border-gray-600">
-                                                                                {/* Modal Header */}
-                                                                                <div className="flex items-center justify-between p-4 border-b border-gray-600">
-                                                                                    <h2 className="text-white font-medium">Delete board?</h2>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            preventPropagation(e);
-                                                                                            setShowDeleteConfirm(false)
-                                                                                        }}
-                                                                                        className="text-gray-400 hover:text-white transition-colors p-1 rounded"
-                                                                                    >
-                                                                                        <X className="w-4 h-4" />
-                                                                                    </button>
-                                                                                </div>
-
-                                                                                {/* Modal Body */}
-                                                                                <div className="p-4">
-                                                                                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                                                                                        All lists, cards and actions will be deleted, and you won't be able to re-open the board. There is no undo.
-                                                                                    </p>
-                                                                                    
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            preventPropagation(e);
-                                                                                            handleDeleteBoard(board.id);
-                                                                                        }}
-                                                                                        className="w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded font-medium transition-colors"
-                                                                                    >
-                                                                                        {loadingDeleteConfirmModal ? <LoadingContent /> : 'Delete'}
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
+                    {showClosedBoards && 
+                        <ClosedBoards 
+                            hideClosedBoards={() => setShowClosedBoards(false)} 
+                        />
+                    }
                 </div>
             </div>
         </div>

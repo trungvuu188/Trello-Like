@@ -22,18 +22,6 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
     const [workspaceNameError, setWorkspaceNameError] = useState('');
     const [workspaceDescriptionError, setWorkspaceDescriptionError] = useState('');
 
-    const workspaceTypes = [
-        'Education',
-        'Business',
-        'Marketing',
-        'Small Business',
-        'Operations',
-        'HR & Operations',
-        'Engineering-IT',
-        'Sales CRM',
-        'Other'
-    ];
-
     const handleSubmit = async () => {
         if (workspaceName.trim()) {
             try {
@@ -66,11 +54,6 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
                 });
             }
         }
-    };
-
-    const handleTypeSelect = (type: string) => {
-        setWorkspaceType(type);
-        setIsDropdownOpen(false);
     };
 
     if (!isOpen) return null;
@@ -121,47 +104,6 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
                                 <p className="text-xs text-gray-400 mt-1">
                                     This is the name of your company, team or organization.
                                 </p>
-                            </div>
-
-                            {/* Workspace Type */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">
-                                    Workspace type
-                                </label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between"
-                                    >
-                                        <span className={workspaceType ? 'text-white' : 'text-gray-400'}>
-                                            {workspaceType || 'Choose...'}
-                                        </span>
-                                        <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-
-                                    {isDropdownOpen && (
-                                        <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg">
-                                            {workspaceTypes.map((type) => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() => handleTypeSelect(type)}
-                                                    className="w-full px-3 py-2 text-left text-white hover:bg-gray-600 first:rounded-t-md last:rounded-b-md"
-                                                >
-                                                    {type}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
                             </div>
 
                             {/* Workspace Description */}

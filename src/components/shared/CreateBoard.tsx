@@ -16,24 +16,43 @@ const backgroundOptions = [
 
 type CreateBoardProp = {
   id: number | null; 
+  workspaceName: string;
   onBoardCreated?: () => void;
 };
 
-const CreateBoard: React.FC<CreateBoardProp> = ({ id, onBoardCreated }) => {
+const CreateBoard: React.FC<CreateBoardProp> = ({ id, workspaceName, onBoardCreated }) => {
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [boardTitle, setBoardTitle] = useState('');
     const [selectedBackground, setSelectedBackground] = useState(0);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleCreateBoard = async () => {
         if(!id) return;
         if (boardTitle.trim()) {
+            setIsLoading(true);
+            setErrorMessage(''); // Clear any previous errors
+            
             await createBoard(boardTitle, id)
-            .then(data => onBoardCreated?.())
-            .catch(err => console.log(err))
-            setShowCreateModal(false);
-            setBoardTitle('');
-            setSelectedBackground(0);
+            .then(_ => {
+                onBoardCreated?.()
+                setShowCreateModal(false);
+                setBoardTitle('');
+                setSelectedBackground(0);
+                setErrorMessage(''); // Clear errors on success
+            })
+            .catch(err => {
+                // Handle different error response structures
+                const apiErrorMessage = err.response?.data?.errors?.[0]?.message 
+                    || err.response?.data?.message 
+                    || err.message 
+                    || 'An error occurred while creating the board';
+                setErrorMessage(apiErrorMessage);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
         }
     };
 
@@ -41,7 +60,29 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, onBoardCreated }) => {
         setShowCreateModal(false);
         setBoardTitle('');
         setSelectedBackground(0);
+        setErrorMessage(''); // Clear errors when closing
     };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBoardTitle(e.target.value);
+        // Clear error message when user starts typing
+        if (errorMessage) {
+            setErrorMessage('');
+        }
+    };
+
+    // Determine what error to show
+    const getErrorToDisplay = () => {
+        if (errorMessage) {
+            return errorMessage; // Show API error message
+        }
+        if (!boardTitle.trim()) {
+            return 'Board title is required'; // Show validation error
+        }
+        return null;
+    };
+
+    const errorToDisplay = getErrorToDisplay();
 
     return (
         <>
@@ -108,14 +149,19 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, onBoardCreated }) => {
                                 <input
                                     type="text"
                                     value={boardTitle}
-                                    onChange={(e) => setBoardTitle(e.target.value)}
-                                    className="w-full px-3 py-2 bg-[#1E2125] border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-400"
-                                    placeholder=""
+                                    onChange={handleTitleChange}
+                                    className={`w-full px-3 py-2 bg-[#1E2125] border rounded text-white text-sm focus:outline-none ${
+                                        errorToDisplay ? 'border-red-400 focus:border-red-400' : 'border-gray-600 focus:border-blue-400'
+                                    }`}
+                                    placeholder="Enter board title"
+                                    disabled={isLoading}
                                 />
-                                {!boardTitle && (
-                                    <div className="flex items-center gap-2 mt-2 text-orange-400">
-                                        <TriangleAlert />
-                                        <span className="text-sm">Board title is required</span>
+                                {errorToDisplay && (
+                                    <div className="flex items-center gap-2 mt-2 text-red-400">
+                                        <TriangleAlert size={16} />
+                                        <span className="text-sm">
+                                            {errorToDisplay}
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -123,30 +169,23 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, onBoardCreated }) => {
                             {/* Workspace Dropdown */}
                             <div className="mb-4">
                                 <label className="block text-sm text-gray-300 mb-2">Workspace</label>
-                                <select className="w-full px-3 py-2 bg-[#1E2125] border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-400">
-                                    <option>Nashtech</option>
-                                </select>
-                            </div>
-
-                            {/* Visibility Dropdown */}
-                            <div className="mb-6">
-                                <label className="block text-sm text-gray-300 mb-2">Visibility</label>
-                                <select className="w-full px-3 py-2 bg-[#1E2125] border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-400">
-                                    <option>Workspace</option>
-                                </select>
+                                <span className="block opacity-60 cursor-not-allowed px-3 py-2 bg-[#1E2125] border border-gray-600 rounded text-white text-sm">
+                                    {workspaceName}
+                                </span>
                             </div>
 
                             {/* Action Buttons */}
                             <div className="flex flex-col space-y-3">
                                 <button
                                     onClick={handleCreateBoard}
-                                    disabled={!boardTitle.trim()}
-                                    className={`w-full py-2 text-sm rounded font-medium ${boardTitle.trim()
+                                    disabled={!boardTitle.trim() || isLoading}
+                                    className={`w-full py-2 text-sm rounded font-medium ${
+                                        boardTitle.trim() && !isLoading
                                             ? 'bg-blue-600 hover:bg-blue-700 text-white'
                                             : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    Create
+                                    {isLoading ? 'Creating...' : 'Create'}
                                 </button>
                             </div>
                         </div>

@@ -103,7 +103,7 @@ const router = createBrowserRouter([
                 ]
             },
             {
-                path: 'board/:id',
+                path: 'workspace/:wsId/board/:boardId',
                 element: <WorkspaceBoard />,
             },
             {
