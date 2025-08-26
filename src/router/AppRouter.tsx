@@ -15,13 +15,15 @@ import UnauthorizedFallback from '@/components/shared/UnauthorizedFallback';
 import LoginForm from '@/components/auth/LoginForm';
 import AuthLayout from '@/components/layout/AuthLayout';
 import RegisterForm from '@/components/auth/RegisterForm';
-import Board from '@/pages/workspace/Board';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import Boards from '@/pages/Boards';
 import Template from '@/pages/Template';
 import Home from '@/pages/Home';
 import Member from '@/pages/workspace/Member';
 import Setting from '@/pages/workspace/Setting';
+import WorkspaceBoard from '@/pages/WorkspaceBoard';
+import HomeBoards from '@/pages/HomeBoards';
+import Boards from '@/pages/workspace/Board';
+import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 
 // Layout wrappers for different roles
 const AdminLayout = () => (
@@ -84,7 +86,7 @@ const router = createBrowserRouter([
                 children: [
                     {
                         path: 'boards',
-                        element: <Boards />,
+                        element: <HomeBoards />,
                     },
                     {
                         path: 'templates',
@@ -94,23 +96,33 @@ const router = createBrowserRouter([
                         path: 'home',
                         element: <Home />
                     },
+                    {
+                        path: 'detail',
+                        element: <WorkspaceDetail />,
+                    }
                 ]
             },
             {
+                path: 'workspace/:wsId/board/:boardId',
+                element: <WorkspaceBoard />,
+            },
+            {
                 path: 'workspace',
+                element: <SidebarLayout />,
                 children: [
                     {
-                        path: 'board',
-                        element: <Board />,
+                        path: 'boards/:id',
+                        element: <Boards />,
                     },
                     {
-                        path: 'member',
+                        path: 'members/:id',
                         element: <Member />,
                     },
                     {
-                        path: 'setting',
+                        path: 'setting/:id',
                         element: <Setting />,
                     },
+                    
                 ]
             },
         ],
@@ -120,6 +132,10 @@ const router = createBrowserRouter([
     {
         path: '/unauthorized',
         element: <UnauthorizedFallback />,
+    },
+    {
+        path: '/not-found',
+        element: <NotFound />,
     },
     {
         path: '*',

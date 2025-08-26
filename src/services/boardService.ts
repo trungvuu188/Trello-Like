@@ -1,10 +1,10 @@
 import type { UrlPreviewData } from '@/types';
 import axiosClients from './axiosClient';
 
-const baseUrl = '/url-preview';
+const previewUrl = '/url-preview';
 
 const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
-    return axiosClients.get(`${baseUrl}`, {
+    return axiosClients.get(`${previewUrl}`, {
         params: {
             url,
         },
