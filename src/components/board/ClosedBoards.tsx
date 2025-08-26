@@ -4,6 +4,7 @@ import LoadingContent from '../ui/LoadingContent';
 import type { WorkSpace } from '@/types/workspace';
 import { deleteBoard, getClosedBoards, reopenBoard } from '@/services/workspaceService';
 import ClosedBoardItem from './ClosedBoardItem';
+import { notify } from '@/services/toastService';
 
 interface ClosedBoardsProp {
     hideClosedBoards: () => void
@@ -28,13 +29,15 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
     };
 
     const handleReopenBoard = async (boardId: number) => {
-        await reopenBoard(boardId);
+        await reopenBoard(boardId)
+            .then(data => notify.success(data.message));
         fetchClosedBoards();
         setActiveConfirmation(null);
     };
 
     const handleDeleteBoard = async (boardId: number) => {
-        await deleteBoard(boardId);
+        await deleteBoard(boardId)
+            .then(data => notify.success(data.message));
         fetchClosedBoards();
         setActiveConfirmation(null);
     };

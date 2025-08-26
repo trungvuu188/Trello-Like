@@ -1,8 +1,8 @@
 import { getWorkspaces } from '@/services/workspaceService';
 import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
-import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings, Users } from 'lucide-react';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings } from 'lucide-react';
+import { useLayoutEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navigationItems = [
@@ -33,12 +33,12 @@ const workspaceItems = [
         title: 'Boards',
         navigate: '/workspace/boards'
     },
-    {
-        id: 'w-item2',
-        icon: <Users />,
-        title: 'Members',
-        navigate: '/workspace/members'
-    },
+    // {
+    //     id: 'w-item2',
+    //     icon: <Users />,
+    //     title: 'Members',
+    //     navigate: '/workspace/members'
+    // },
     {
         id: 'w-item3',
         icon: <Settings />,

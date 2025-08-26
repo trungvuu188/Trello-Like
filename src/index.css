@@ -6,6 +6,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'react-toastify/dist/ReactToastify.css';
+
 /* Base styles and CSS reset */
 @layer base {
     html {
