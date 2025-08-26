@@ -1,5 +1,6 @@
 import ClosedBoards from "@/components/board/ClosedBoards";
 import CreateBoard from "@/components/shared/CreateBoard";
+import { notify } from "@/services/toastService";
 import { getBoards, getWorkspaceById, updateWorkspace } from "@/services/workspaceService";
 import type { Board } from "@/types/project";
 import type { WorkSpace } from "@/types/workspace";
@@ -54,12 +55,14 @@ const Boards = () => {
             Number.parseInt(id),
             workspaceEditData?.name,
             workspaceEditData?.desc || null
-        ).then(_ => {
+        ).then(data => {
+            notify.success(data.message);
             setIsEditingWorkspace(false);
             fetchWorkspaceDetail();
         })
             .catch(error => {
                 const errorFields = error?.response?.data?.errors || [];
+                notify.success(errorFields);
                 // Set error messages based on the response
                 errorFields.forEach((element: { field: string; message: SetStateAction<string>; }) => {
                     switch (element.field) {

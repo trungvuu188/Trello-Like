@@ -1,25 +1,26 @@
 import { completedBoard } from '@/services/workspaceService';
-import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
+// import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const menuItems = [
-    { icon: <Users />, label: "Share", color: "text-gray-300" },
-    { icon: <EarthIcon />, label: "Visibility: Workspace", color: "text-gray-300" },
-    { icon: <Settings />, label: "Settings", color: "text-gray-300" },
-    { icon: <Image />, label: "Change background", color: "text-gray-300" },
-];
+// const menuItems = [
+//     { icon: <Users />, label: "Share", color: "text-gray-300" },
+//     { icon: <EarthIcon />, label: "Visibility: Workspace", color: "text-gray-300" },
+//     { icon: <Settings />, label: "Settings", color: "text-gray-300" },
+//     { icon: <Image />, label: "Change background", color: "text-gray-300" },
+// ];
 
-const powerUpItems = [
-    { icon: <Tag />, label: "Labels", color: "text-gray-300" },
-    { icon: <Activity />, label: "Activity", color: "text-gray-300" },
-    { icon: <Folder />, label: "Archived items", color: "text-gray-300" },
-];
+// const powerUpItems = [
+//     { icon: <Tag />, label: "Labels", color: "text-gray-300" },
+//     { icon: <Activity />, label: "Activity", color: "text-gray-300" },
+//     { icon: <Folder />, label: "Archived items", color: "text-gray-300" },
+// ];
 
-const moreItems = [
-    { icon: <Eye />, label: "Watch", color: "text-gray-300"},
-    { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
-];
+// const moreItems = [
+//     { icon: <Eye />, label: "Watch", color: "text-gray-300"},
+//     { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
+// ];
 
 const BoardNavbar = () => {
 

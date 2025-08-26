@@ -1,6 +1,7 @@
 import { createBoard } from '@/services/workspaceService';
 import { TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
+import { notify } from '@/services/toastService';
 
 const backgroundOptions = [
     { type: 'image', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop' },
@@ -35,7 +36,8 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, workspaceName, onBoardCrea
             setErrorMessage(''); // Clear any previous errors
             
             await createBoard(boardTitle, id)
-            .then(_ => {
+            .then(res => {
+                notify.success(res.message);
                 onBoardCreated?.()
                 setShowCreateModal(false);
                 setBoardTitle('');
@@ -49,6 +51,7 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, workspaceName, onBoardCrea
                     || err.message 
                     || 'An error occurred while creating the board';
                 setErrorMessage(apiErrorMessage);
+                notify.error(apiErrorMessage);
             })
             .finally(() => {
                 setIsLoading(false);
@@ -192,6 +195,7 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, workspaceName, onBoardCrea
                     </div>
                 </div>
             )}
+            
         </>
     );
 }

@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import CreateWorkspaceModal from '@/components/shared/CreateModal';
 import { createWorkspace } from '@/services/workspaceService';
+import { notify } from '@/services/toastService';
 
 interface ProfileDropdownProps {
     userName?: string;
@@ -42,20 +43,8 @@ const ProfileDropDown: React.FC<ProfileDropdownProps> = ({
                     </div>
                 </div>
 
-                <div className='space-y-1 mb-4'>
-                    <button className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'>
-                        Switch accounts
-                    </button>
-                    <button className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'>
-                        Manage account
-                    </button>
-                </div>
-
                 <div className='border-t border-gray-600 pt-4'>
-                    <div className='text-xs text-[#B6C2CF] uppercase tracking-wide font-semibold mb-3'>
-                        TRELLO
-                    </div>
-                    <div className='space-y-1 mb-4'>
+                    {/* <div className='space-y-1 mb-4'>
                         <button className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'>
                             Profile and visibility
                         </button>
@@ -84,7 +73,7 @@ const ProfileDropDown: React.FC<ProfileDropdownProps> = ({
                                 />
                             </svg>
                         </button>
-                    </div>
+                    </div> */}
 
                     <button
                         onClick={handleCreateWorkspace} 
@@ -107,15 +96,6 @@ const ProfileDropDown: React.FC<ProfileDropdownProps> = ({
                 </div>
 
                 <div className='border-t border-gray-600 pt-4'>
-                    <div className='space-y-1 mb-4'>
-                        <button className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'>
-                            Help
-                        </button>
-                        <button className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'>
-                            Shortcuts
-                        </button>
-                    </div>
-
                     <button
                         onClick={handleLogout}
                         className='w-full text-left px-3 py-2 text-sm text-[#B6C2CF] hover:bg-gray-700 rounded'
@@ -142,7 +122,12 @@ const Navbar: React.FC = () => {
         await createWorkspace(
             workspaceData.name,
             workspaceData.description
-        );
+        ).then(data => {
+            notify.success(data.message);
+        })
+        .catch(err => {
+            console.log(err);
+        });
     };
 
     const handleLogout = async () => {
@@ -178,7 +163,7 @@ const Navbar: React.FC = () => {
                                 </svg>
                             </div>
                             <span className='text-white font-semibold text-lg'>
-                                Trello
+                                Smart Taskhub
                             </span>
                         </div>
                     </Link>

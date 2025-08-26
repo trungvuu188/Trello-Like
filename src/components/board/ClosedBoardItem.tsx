@@ -32,7 +32,7 @@ const ClosedBoardItem: React.FC<ClosedBoardItemProp> = ({
     const deleteBoardAction = async () => {
         if (!id) return;
         setLoadingDeleteConfirmModal(true);
-        await handleDeleteBoard(id);
+        await handleDeleteBoard(id)
         setLoadingDeleteConfirmModal(false);
     }
 
@@ -92,7 +92,7 @@ const ClosedBoardItem: React.FC<ClosedBoardItemProp> = ({
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 bg-black/30 z-[60]"
+                        className="fixed inset-0 z-[60]"
                         onClick={onHideConfirmation}
                     />
 

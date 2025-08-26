@@ -7,7 +7,7 @@ interface CreateWorkspaceModalProps {
         name: string;
         type: string;
         description: string | null;
-    }) => void;
+    }) => Promise<void>;
 }
 
 const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
@@ -18,7 +18,6 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
     const [workspaceName, setWorkspaceName] = useState('');
     const [workspaceType, setWorkspaceType] = useState('');
     const [workspaceDescription, setWorkspaceDescription] = useState<string | null>(null);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [workspaceNameError, setWorkspaceNameError] = useState('');
     const [workspaceDescriptionError, setWorkspaceDescriptionError] = useState('');
 

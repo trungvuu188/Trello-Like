@@ -1,4 +1,5 @@
-import { getWorkspaceById } from "@/services/workspaceService";
+import { notify } from "@/services/toastService";
+import { deleteWorkspace, getWorkspaceById } from "@/services/workspaceService";
 import type { WorkSpace } from "@/types/workspace";
 import { EarthIcon, LockKeyhole } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
@@ -42,7 +43,14 @@ const Setting = () => {
         if (deleteInputValue === workspaceData.name) {
             setShowDeleteModal(false);
             setDeleteInputValue('');
-            // await deleteWorkspace(Number(id));
+            await deleteWorkspace(Number(id))
+            .then(data => {
+                notify.success(data.message);
+                navigate('/')
+            })
+            .catch(err => {
+                console.log(err);
+            });
         }
     };
 
