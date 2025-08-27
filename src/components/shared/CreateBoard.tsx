@@ -38,8 +38,8 @@ const CreateBoard: React.FC<CreateBoardProp> = ({ id, workspaceName, onBoardCrea
             await createBoard(boardTitle, id)
             .then(res => {
                 notify.success(res.message);
-                onBoardCreated?.()
                 setShowCreateModal(false);
+                onBoardCreated?.()
                 setBoardTitle('');
                 setSelectedBackground(0);
                 setErrorMessage(''); // Clear errors on success
