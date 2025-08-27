@@ -5,7 +5,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X } from 'lucide-react';
+import { Ellipsis, Plus, X } from 'lucide-react';
 import React, {
     useCallback,
     useEffect,
@@ -16,6 +16,7 @@ import React, {
 import UrlPreview from './UrlPreview';
 import { detectUrl } from '@/utils/UrlPreviewUtils';
 import DraggableItem from './DraggableItem';
+import ColumnOptionsMenu from './ColumnOptionsMenu';
 
 interface DroppableColumnProps {
     column: Column;
@@ -29,6 +30,8 @@ interface DroppableColumnProps {
     onDeleteItem: (itemId: string) => void;
     onDeleteColumn: (columnId: string) => void;
     onUpdateColumnTitle: (columnId: string, newTitle: string) => void;
+    onArchiveColumn: (columnId: string) => void;
+    onArchiveAllItems: (columnId: string) => void;
     handleShowDetailTask: () => void;
 }
 
@@ -44,9 +47,12 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     onDeleteColumn,
     onDeleteItem,
     onUpdateColumnTitle,
+    onArchiveColumn,
+    onArchiveAllItems,
     handleShowDetailTask
 }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [showOptionsMenu, setShowOptionsMenu] = useState(false);
     const [titleValue, setTitleValue] = useState(column.title);
     const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -117,12 +123,15 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     }, [isEditingTitle]);
 
     const handleAddCard = useCallback(() => {
-        // Close title editing when starting to add card
+        // Close title editing and options menu when starting to add card
         if (isEditingTitle) {
             handleTitleSubmit();
         }
+        if (showOptionsMenu) {
+            setShowOptionsMenu(false);
+        }
         onStartAddingCard(column.id);
-    }, [isEditingTitle, column.id, onStartAddingCard]);
+    }, [isEditingTitle, showOptionsMenu, column.id, onStartAddingCard]);
 
     const handleSubmit = useCallback(() => {
         onSubmitCard(column.id);
@@ -142,12 +151,15 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     );
 
     const handleTitleClick = useCallback(() => {
-        // Close add card input if it's open
+        // Close add card input and options menu if they're open
         if (isAddingCard) {
             onCancelCard();
         }
+        if (showOptionsMenu) {
+            setShowOptionsMenu(false);
+        }
         setIsEditingTitle(true);
-    }, [isAddingCard, onCancelCard]);
+    }, [isAddingCard, showOptionsMenu, onCancelCard]);
 
     const handleTitleSubmit = useCallback(() => {
         if (titleValue.trim() && titleValue.trim() !== column.title) {
@@ -178,19 +190,26 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
             const newTitle = cardTitle.replace(detectedUrl, '').trim();
             setCardTitle(newTitle);
         }
-    }, [detectUrl, cardTitle, setCardTitle]);
+    }, [detectedUrl, cardTitle, setCardTitle]);
 
     // Prevent event bubbling to parent container when clicking inside the input area
     const handleInputAreaClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
     }, []);
 
-    const handleDeleteColumn = useCallback(
+    const handleOptionsMenuToggle = useCallback(
         (e: React.MouseEvent) => {
             e.stopPropagation();
-            onDeleteColumn(column.id);
+            // Close other UI states when opening options menu
+            if (isAddingCard) {
+                onCancelCard();
+            }
+            if (isEditingTitle) {
+                handleTitleSubmit();
+            }
+            setShowOptionsMenu(!showOptionsMenu);
         },
-        [column.id, onDeleteColumn]
+        [showOptionsMenu, isAddingCard, isEditingTitle, onCancelCard, handleTitleSubmit]
     );
 
     const handleTitleInputClick = useCallback((e: React.MouseEvent) => {
@@ -204,6 +223,14 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
         },
         [handleTitleClick]
     );
+
+    const handleArchiveColumn = useCallback(() => {
+        onArchiveColumn(column.id);
+    }, [column.id, onArchiveColumn]);
+
+    const handleArchiveAllItems = useCallback(() => {
+        onArchiveAllItems(column.id);
+    }, [column.id, onArchiveAllItems]);
 
     return (
         <div
@@ -227,24 +254,33 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
                             onChange={e => setTitleValue(e.target.value)}
                             onKeyDown={handleTitleKeyDown}
                             onBlur={handleTitleSubmit}
-                            className='font-semibold text-[#B6C2CF] bg-[#22272B] border border-[#394B59] rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1'
+                            className='font-semibold text-[#B6C2CF] bg-[#22272B] border border-[#394B59] rounded px-2 py-1 -mx-2 -my-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1'
                             onClick={handleTitleInputClick} // Prevent drag when clicking input
                         />
                     ) : (
                         <h3
-                            className='font-semibold text-[#B6C2CF] cursor-pointer hover:bg-[#22272B] rounded px-2 py-1 -mx-2 -my-1 transition-colors flex-1'
+                            className='font-semibold text-[#B6C2CF] cursor-pointer border border-transparent hover:bg-[#22272B] rounded px-2 py-1 -mx-2 -my-1 transition-colors flex-1'
                             onClick={handleTitleDisplay}
                         >
                             {column.title}
                         </h3>
                     )}
                 </div>
-                <button
-                    onClick={handleDeleteColumn}
-                    className='text-gray-400 hover:text-red-500 transition-colors flex-shrink-0'
-                >
-                    <X size={16} />
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={handleOptionsMenuToggle}
+                        className='text-gray-400 hover:text-gray-300 hover:bg-[#22272B] rounded p-1 transition-colors flex-shrink-0'
+                    >
+                        <Ellipsis size={16} />
+                    </button>
+                    
+                    <ColumnOptionsMenu
+                        isOpen={showOptionsMenu}
+                        onClose={() => setShowOptionsMenu(false)}
+                        onArchiveColumn={handleArchiveColumn}
+                        onArchiveAllItems={handleArchiveAllItems}
+                    />
+                </div>
             </div>
             <SortableContext
                 items={itemIds}

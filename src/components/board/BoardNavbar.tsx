@@ -1,8 +1,9 @@
 import { completedBoard } from '@/services/workspaceService';
 // import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
-import { Menu, X } from 'lucide-react';
+import { Folder, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import ArchivedItemsModal from './ArchivedItemsModal';
 
 // const menuItems = [
 //     { icon: <Users />, label: "Share", color: "text-gray-300" },
@@ -11,16 +12,42 @@ import { useNavigate, useParams } from 'react-router-dom';
 //     { icon: <Image />, label: "Change background", color: "text-gray-300" },
 // ];
 
-// const powerUpItems = [
-//     { icon: <Tag />, label: "Labels", color: "text-gray-300" },
-//     { icon: <Activity />, label: "Activity", color: "text-gray-300" },
-//     { icon: <Folder />, label: "Archived items", color: "text-gray-300" },
-// ];
+const powerUpItems = [
+    // { icon: <Tag />, label: "Labels", color: "text-gray-300" },
+    // { icon: <Activity />, label: "Activity", color: "text-gray-300" },
+];
 
 // const moreItems = [
 //     { icon: <Eye />, label: "Watch", color: "text-gray-300"},
 //     { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
 // ];
+
+// Mock data - replace with your actual data
+const mockArchivedCards = [
+    {
+        id: '1',
+        title: 'Completed task example',
+        type: 'card' as const,
+        archivedAt: new Date('2024-01-15'),
+        columnId: 'col1'
+    },
+    {
+        id: '2', 
+        title: 'Another archived card',
+        type: 'card' as const,
+        archivedAt: new Date('2024-01-14'),
+        columnId: 'col2'
+    }
+];
+
+const mockArchivedLists = [
+    {
+        id: 'list1',
+        title: 'Old Sprint Column',
+        type: 'list' as const,
+        archivedAt: new Date('2024-01-10'),
+    }
+];
 
 const BoardNavbar = () => {
 
@@ -30,6 +57,7 @@ const BoardNavbar = () => {
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+    const [showArchivedItems, setShowArchivedItems] = useState(false);
 
     const handleCloseMenu = () => {
         setShowCloseConfirm(false);
@@ -45,6 +73,41 @@ const BoardNavbar = () => {
 
     const cancelCloseBoard = () => {
         setShowCloseConfirm(false);
+    };
+
+    const handleArchivedItemsClick = () => {
+        setShowMenu(false);
+        setShowArchivedItems(true);
+    };
+
+    const handleBackToMenu = () => {
+        setShowArchivedItems(false);
+        setShowMenu(true);
+    };
+
+    const handleCloseArchivedItems = () => {
+        setShowArchivedItems(false);
+    };
+
+    // Archive handlers - implement these based on your data management
+    const handleRestoreCard = (cardId: string) => {
+        console.log('Restoring card:', cardId);
+        // Implement your restore card logic here
+    };
+
+    const handleRestoreList = (listId: string) => {
+        console.log('Restoring list:', listId);
+        // Implement your restore list logic here
+    };
+
+    const handleDeleteCard = (cardId: string) => {
+        console.log('Permanently deleting card:', cardId);
+        // Implement your permanent delete card logic here
+    };
+
+    const handleDeleteList = (listId: string) => {
+        console.log('Permanently deleting list:', listId);
+        // Implement your permanent delete list logic here
     };
 
     return (
@@ -113,19 +176,17 @@ const BoardNavbar = () => {
                                 <div className="border-t border-gray-600 my-2"></div>
 
                                 {/* Power-Ups Section */}
-                                {/* {powerUpItems.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
-                                    >
-                                        <span className="mr-3 text-base text-white">{item.icon}</span>
-                                        <div className="flex-1">
-                                            <div className={item.color}>
-                                                {item.label}
-                                            </div>
+                                <button 
+                                    onClick={handleArchivedItemsClick}
+                                    className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                >
+                                    <span className="mr-3 text-base text-white"><Folder /></span>
+                                    <div className="flex-1">
+                                        <div className='text-gray-300'>
+                                            Archived items
                                         </div>
-                                    </button>
-                                ))} */}
+                                    </div>
+                                </button>
 
                                 {/* Divider */}
                                 <div className="border-t border-gray-600 my-2"></div>
@@ -243,6 +304,18 @@ const BoardNavbar = () => {
                     </>
                 )}
 
+                {/* Archived Items Modal */}
+                <ArchivedItemsModal
+                    isOpen={showArchivedItems}
+                    onClose={handleCloseArchivedItems}
+                    onBack={handleBackToMenu}
+                    archivedCards={mockArchivedCards}
+                    archivedLists={mockArchivedLists}
+                    onRestoreCard={handleRestoreCard}
+                    onRestoreList={handleRestoreList}
+                    onDeleteCard={handleDeleteCard}
+                    onDeleteList={handleDeleteList}
+                />
             </div>
         </div>
     );

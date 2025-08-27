@@ -48,9 +48,7 @@ const Setting = () => {
                 notify.success(data.message);
                 navigate('/')
             })
-            .catch(err => {
-                console.log(err);
-            });
+            .catch(err => notify.error(err?.message));
         }
     };
 

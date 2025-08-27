@@ -1,3 +1,4 @@
+import { notify } from '@/services/toastService';
 import { getWorkspaces } from '@/services/workspaceService';
 import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
@@ -58,7 +59,7 @@ const Sidebar = () => {
                 if (!data.data) return;
                 setWorkSpaces([...data.data]);
             })
-            .catch(err => console.log(err))
+            .catch(err => notify.error(err?.message))
     }
 
     useLayoutEffect(() => {

@@ -1,5 +1,6 @@
 import type { UrlPreviewData } from '@/types';
 import * as BoardService from '@/services/boardService';
+import { notify } from '@/services/toastService';
 
 // URL detection regex
 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -24,7 +25,7 @@ export const fetchUrlPreviewUtil = async (
                 `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`,
         }))
         .catch(error => {
-            console.error('Backend fetch failed:', error);
+            notify.error(error?.message);
             // Fallback to basic info if backend fails
             return {
                 url,

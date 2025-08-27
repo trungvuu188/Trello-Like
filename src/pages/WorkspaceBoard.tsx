@@ -1,6 +1,7 @@
 import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
+import LoadingContent from '@/components/ui/LoadingContent';
 import type { Column, Item } from '@/types';
 import {
     DndContext,
@@ -24,40 +25,51 @@ import {
 import { GripVertical, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const WorkspaceBoard = () => {
-    const [columns, setColumns] = useState<Column[]>([
-        {
-            id: 'col-1',
-            title: 'Backlog',
-            items: [
-                { id: 'item-1', content: 'Design the new landing page' },
-                { id: 'item-2', content: 'Set up database schema' },
-                { id: 'item-3', content: 'Write API auth' },
-            ],
-        },
-        {
-            id: 'col-2',
-            title: 'To do',
-            items: [
-                { id: 'item-4', content: 'Security config' },
-                { id: 'item-5', content: 'Responsive for layout' },
-            ],
-        },
-        {
-            id: 'col-3',
-            title: 'Process',
-            items: [
-                { id: 'item-6', content: 'Unit testing' },
-                { id: 'item-7', content: 'CI/CD with Github Action' },
-            ],
-        },
-    ]);
+const mockColumns = [
+    {
+        id: 'col-1',
+        title: 'Backlog',
+        items: [
+            { id: 'item-1', content: 'Design the new landing page' },
+            { id: 'item-2', content: 'Set up database schema' },
+            { id: 'item-3', content: 'Write API auth' },
+        ],
+    },
+    {
+        id: 'col-2',
+        title: 'To do',
+        items: [
+            { id: 'item-4', content: 'Security config' },
+            { id: 'item-5', content: 'Responsive for layout' },
+        ],
+    },
+    {
+        id: 'col-3',
+        title: 'Process',
+        items: [
+            { id: 'item-6', content: 'Unit testing' },
+            { id: 'item-7', content: 'CI/CD with Github Action' },
+        ],
+    },
+]
 
+const WorkspaceBoard = () => {
+    const [columns, setColumns] = useState<Column[]>([]);
+
+    const [isLoading, setIsLoading] = useState(false);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
     const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
     const [cardTitle, setCardTitle] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setIsLoading(true);
+        setTimeout(() => {
+            setColumns(mockColumns);
+            setIsLoading(false);
+        }, 3000)
+    }, []);
 
     // OPTIMIZATION: Track dragging state separately from active elements
     const [isDragging, setIsDragging] = useState(false);
@@ -451,6 +463,14 @@ const WorkspaceBoard = () => {
         );
     }, []);
 
+    const handleArchiveColumn = useCallback((columnId: string) => {
+        console.log("archived column");
+    }, []);
+
+    const handleArchiveAllItemInColumns = useCallback((columnId: string) => {
+        console.log("archived all items");
+    }, []);
+
     const handleHideDetailModal = useCallback(() => {
         setShowDetailModal(false);
     }, []);
@@ -474,81 +494,89 @@ const WorkspaceBoard = () => {
 
     return (
         <div className='bg-[#283449] w-full h-full flex flex-col'>
-            <BoardNavbar />
-            <div className='grow overflow-hidden'>
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={pointerWithin}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDragEnd={handleDragEnd}
-                >
-                    <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
-                        <SortableContext
-                            items={columnIds}
-                            strategy={horizontalListSortingStrategy}
+            {
+                isLoading ? 
+                <LoadingContent /> : 
+                <>
+                    <BoardNavbar />
+                    <div className='grow overflow-hidden'>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={pointerWithin}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDragEnd={handleDragEnd}
                         >
-                            {columnProps.map(col => (
-                                <DroppableColumn
-                                    key={col.key}
-                                    column={col.column}
-                                    items={col.items}
-                                    isAddingCard={col.isAddingCard}
-                                    cardTitle={cardTitle}
-                                    setCardTitle={setCardTitle}
-                                    onStartAddingCard={handleStartAddingCard}
-                                    onSubmitCard={handleSubmitCard}
-                                    onCancelCard={handleCancelCard}
-                                    onDeleteItem={deleteItem}
-                                    onDeleteColumn={deleteColumn}
-                                    onUpdateColumnTitle={handleUpdateColumnTitle}
-                                    handleShowDetailTask={handleShowDetailModal}
-                                />
-                            ))}
-                        </SortableContext>
-
-                        <button
-                            onClick={addColumn}
-                            className='bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white'
-                        >
-                            <Plus size={20} />
-                            Add another column
-                        </button>
+                            <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
+                                <SortableContext
+                                    items={columnIds}
+                                    strategy={horizontalListSortingStrategy}
+                                >
+                                    {columnProps.map(col => (
+                                        <DroppableColumn
+                                            key={col.key}
+                                            column={col.column}
+                                            items={col.items}
+                                            isAddingCard={col.isAddingCard}
+                                            cardTitle={cardTitle}
+                                            setCardTitle={setCardTitle}
+                                            onStartAddingCard={handleStartAddingCard}
+                                            onSubmitCard={handleSubmitCard}
+                                            onCancelCard={handleCancelCard}
+                                            onDeleteItem={deleteItem}
+                                            onDeleteColumn={deleteColumn}
+                                            onUpdateColumnTitle={handleUpdateColumnTitle}
+                                            onArchiveColumn={handleArchiveColumn}
+                                            onArchiveAllItems={handleArchiveAllItemInColumns}
+                                            handleShowDetailTask={handleShowDetailModal}
+                                        />
+                                    ))}
+                                </SortableContext>
+        
+                                <button
+                                    onClick={addColumn}
+                                    className='bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white'
+                                >
+                                    <Plus size={20} />
+                                    Add another column
+                                </button>
+                            </div>
+                            <DragOverlay>
+                                {activeElements.activeColumn ? (
+                                    <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
+                                        <div className='flex items-center gap-2 mb-4'>
+                                            <GripVertical
+                                                size={16}
+                                                className='text-gray-400'
+                                            />
+                                            <h3 className='font-semibold text-white'>
+                                                {activeElements.activeColumn.title}
+                                            </h3>
+                                            <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
+                                                {
+                                                    activeElements.activeColumn.items
+                                                        .length
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : activeElements.activeItem ? (
+                                    <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
+                                        <span className='text-sm text-white whitespace-pre-wrap break-words'>
+                                            {activeElements.activeItem.content}
+                                        </span>
+                                    </div>
+                                ) : null}
+                            </DragOverlay>
+                        </DndContext>
                     </div>
-                    <DragOverlay>
-                        {activeElements.activeColumn ? (
-                            <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
-                                <div className='flex items-center gap-2 mb-4'>
-                                    <GripVertical
-                                        size={16}
-                                        className='text-gray-400'
-                                    />
-                                    <h3 className='font-semibold text-white'>
-                                        {activeElements.activeColumn.title}
-                                    </h3>
-                                    <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
-                                        {
-                                            activeElements.activeColumn.items
-                                                .length
-                                        }
-                                    </span>
-                                </div>
-                            </div>
-                        ) : activeElements.activeItem ? (
-                            <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
-                                <span className='text-sm text-white whitespace-pre-wrap break-words'>
-                                    {activeElements.activeItem.content}
-                                </span>
-                            </div>
-                        ) : null}
-                    </DragOverlay>
-                </DndContext>
-            </div>
-            <TaskDetailModal
-                isOpen={showDetailModal}
-                onClose={handleHideDetailModal}
-                item={{ id: '1', content: 'Hello' }}
-            />
+                    <TaskDetailModal
+                        isOpen={showDetailModal}
+                        onClose={handleHideDetailModal}
+                        item={{ id: '1', content: 'Hello' }}
+                    />
+                </>
+            }
         </div>
     );
 };

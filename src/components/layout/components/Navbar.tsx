@@ -125,9 +125,7 @@ const Navbar: React.FC = () => {
         ).then(data => {
             notify.success(data.message);
         })
-        .catch(err => {
-            console.log(err);
-        });
+        .catch(err => notify.error(err?.message));
     };
 
     const handleLogout = async () => {
