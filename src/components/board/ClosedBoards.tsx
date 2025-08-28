@@ -25,7 +25,7 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
                 data?.data && setClosedBoards(data.data)
                 setLoadingClosedModal(false);
             })
-            .catch(err => console.log(err))
+            .catch(err => notify.error(err?.message))
     };
 
     const handleReopenBoard = async (boardId: number) => {

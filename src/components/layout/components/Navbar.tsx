@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import CreateWorkspaceModal from '@/components/shared/CreateModal';
-import { createWorkspace } from '@/services/workspaceService';
-import { notify } from '@/services/toastService';
 
 interface ProfileDropdownProps {
     userName?: string;
@@ -116,18 +114,6 @@ const Navbar: React.FC = () => {
     const handleCreateWorkspace = () => {
         setIsModalOpen(true);
         setIsProfileOpen(false);
-    };
-
-    const handleWorkspaceSubmit = async (workspaceData: any) => {
-        await createWorkspace(
-            workspaceData.name,
-            workspaceData.description
-        ).then(data => {
-            notify.success(data.message);
-        })
-        .catch(err => {
-            console.log(err);
-        });
     };
 
     const handleLogout = async () => {
@@ -275,7 +261,6 @@ const Navbar: React.FC = () => {
             <CreateWorkspaceModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSubmit={handleWorkspaceSubmit}
             />
         </nav>
     );
