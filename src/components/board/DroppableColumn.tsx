@@ -44,7 +44,6 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     onStartAddingCard,
     onSubmitCard,
     onCancelCard,
-    onDeleteColumn,
     onDeleteItem,
     onUpdateColumnTitle,
     onArchiveColumn,
@@ -293,6 +292,11 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
                             item={item}
                             onDelete={onDeleteItem}
                             handleShowDetailTask={handleShowDetailTask}
+                            // label='FE'
+                            // assignedMember={{ 
+                            //     name: "John Doe", 
+                            //     initials: "JD",
+                            // }}
                         />
                     ))}
                 </div>

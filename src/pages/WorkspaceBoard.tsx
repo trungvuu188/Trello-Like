@@ -464,11 +464,11 @@ const WorkspaceBoard = () => {
     }, []);
 
     const handleArchiveColumn = useCallback((columnId: string) => {
-        console.log("archived column");
+        console.log("archived column", columnId);
     }, []);
 
     const handleArchiveAllItemInColumns = useCallback((columnId: string) => {
-        console.log("archived all items");
+        console.log("archived all items", columnId);
     }, []);
 
     const handleHideDetailModal = useCallback(() => {
@@ -570,11 +570,13 @@ const WorkspaceBoard = () => {
                             </DragOverlay>
                         </DndContext>
                     </div>
-                    <TaskDetailModal
-                        isOpen={showDetailModal}
-                        onClose={handleHideDetailModal}
-                        item={{ id: '1', content: 'Hello' }}
-                    />
+                    {
+                        showDetailModal && 
+                        <TaskDetailModal
+                            onClose={handleHideDetailModal}
+                            item={{ id: '1', content: 'Hello' }}
+                        />
+                    }
                 </>
             }
         </div>

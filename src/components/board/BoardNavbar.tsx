@@ -12,10 +12,10 @@ import ArchivedItemsModal from './ArchivedItemsModal';
 //     { icon: <Image />, label: "Change background", color: "text-gray-300" },
 // ];
 
-const powerUpItems = [
+// const powerUpItems = [
     // { icon: <Tag />, label: "Labels", color: "text-gray-300" },
     // { icon: <Activity />, label: "Activity", color: "text-gray-300" },
-];
+// ];
 
 // const moreItems = [
 //     { icon: <Eye />, label: "Watch", color: "text-gray-300"},
@@ -62,6 +62,7 @@ const BoardNavbar = () => {
     const handleCloseMenu = () => {
         setShowCloseConfirm(false);
         setShowMenu(false);
+        setShowArchivedItems(false);
     };
 
     const confirmCloseBoard = async () => {
@@ -76,17 +77,12 @@ const BoardNavbar = () => {
     };
 
     const handleArchivedItemsClick = () => {
-        setShowMenu(false);
         setShowArchivedItems(true);
     };
 
     const handleBackToMenu = () => {
         setShowArchivedItems(false);
         setShowMenu(true);
-    };
-
-    const handleCloseArchivedItems = () => {
-        setShowArchivedItems(false);
     };
 
     // Archive handlers - implement these based on your data management
@@ -141,114 +137,132 @@ const BoardNavbar = () => {
                         />
 
                         {/* Menu */}
-                        <div className="absolute right-0 top-10 w-80 bg-[#2c3e50] rounded-lg shadow-xl z-50 border border-gray-600">
-                            {/* Menu Header */}
-                            <div className="flex items-center justify-between p-3 border-b border-gray-600">
-                                <span className="text-white font-medium text-sm">Menu</span>
-                                <button
-                                    onClick={() => setShowMenu(false)}
-                                    className="text-gray-400 hover:text-white transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Menu Content */}
-                            <div className="p-2">
-                                {/* Main Menu Items */}
-                                {/* {menuItems.map((item, index) => (
+                        {
+                            !showArchivedItems ?
+                            <div className="absolute right-0 top-10 w-80 bg-[#2c3e50] rounded-lg shadow-xl z-50 border border-gray-600">
+                                {/* Menu Header */}
+                                <div className="flex items-center justify-between p-3 border-b border-gray-600">
+                                    <span className="text-white font-medium text-sm">Menu</span>
                                     <button
-                                        key={index}
-                                        className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                        onClick={() => setShowMenu(false)}
+                                        className="text-gray-400 hover:text-white transition-colors"
                                     >
-                                        <span className="mr-3 text-base text-white">{item.icon}</span>
-                                        <div className="flex-1">
-                                            <div className={`${item.color}`}>
-                                                {item.label}
-                                            </div>
-                                        </div>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
                                     </button>
-                                ))} */}
+                                </div>
 
-                                {/* Divider */}
-                                <div className="border-t border-gray-600 my-2"></div>
-
-                                {/* Power-Ups Section */}
-                                <button 
-                                    onClick={handleArchivedItemsClick}
-                                    className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
-                                >
-                                    <span className="mr-3 text-base text-white"><Folder /></span>
-                                    <div className="flex-1">
-                                        <div className='text-gray-300'>
-                                            Archived items
-                                        </div>
-                                    </div>
-                                </button>
-
-                                {/* Divider */}
-                                <div className="border-t border-gray-600 my-2"></div>
-
-                                {/* More Items */}
-                                {/* {moreItems.map((item, index) => (
-                                    <button
-                                        key={index}
-                                        className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
-                                    >
-                                        <span className="mr-3 text-base text-white">{item.icon}</span>
-                                        <div className="flex-1">
-                                            <div className={item.color}>
-                                                {item.label}
+                                {/* Menu Content */}
+                                <div className="p-2">
+                                    {/* Main Menu Items */}
+                                    {/* {menuItems.map((item, index) => (
+                                        <button
+                                            key={index}
+                                            className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                        >
+                                            <span className="mr-3 text-base text-white">{item.icon}</span>
+                                            <div className="flex-1">
+                                                <div className={`${item.color}`}>
+                                                    {item.label}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </button>
-                                ))} */}
-                                {/* Close Board Item - Separate with relative positioning for popup */}
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowCloseConfirm(true)}
+                                        </button>
+                                    ))} */}
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-600 my-2"></div>
+
+                                    {/* Power-Ups Section */}
+                                    <button 
+                                        onClick={handleArchivedItemsClick}
                                         className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
                                     >
-                                        <span className="mr-3 text-base text-white"><X /></span>
+                                        <span className="mr-3 text-base text-white"><Folder /></span>
                                         <div className="flex-1">
-                                            <div className="text-red-400">
-                                                Close board
+                                            <div className='text-gray-300'>
+                                                Archived items
                                             </div>
                                         </div>
                                     </button>
 
-                                    {/* Close Board Confirmation Popup - Positioned above the button */}
-                                    {showCloseConfirm && (
-                                        <>
-                                            {/* Confirmation Popup */}
-                                            <div className="absolute bottom-full right-0 bg-[#1a1a1a] rounded p-3">
-                                                <div className="flex items-center justify-between pb-2 border-b border-gray-600">
-                                                    <h3 className="text-white font-semibold text-sm">Close board?</h3>
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-600 my-2"></div>
+
+                                    {/* More Items */}
+                                    {/* {moreItems.map((item, index) => (
+                                        <button
+                                            key={index}
+                                            className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                        >
+                                            <span className="mr-3 text-base text-white">{item.icon}</span>
+                                            <div className="flex-1">
+                                                <div className={item.color}>
+                                                    {item.label}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))} */}
+                                    {/* Close Board Item - Separate with relative positioning for popup */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowCloseConfirm(true)}
+                                            className="w-full flex items-center px-3 py-2 text-sm hover:bg-[#34495e] transition-colors text-left"
+                                        >
+                                            <span className="mr-3 text-base text-white"><X /></span>
+                                            <div className="flex-1">
+                                                <div className="text-red-400">
+                                                    Close board
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        {/* Close Board Confirmation Popup - Positioned above the button */}
+                                        {showCloseConfirm && (
+                                            <>
+                                                {/* Confirmation Popup */}
+                                                <div className="absolute bottom-full right-0 bg-[#1a1a1a] rounded p-3">
+                                                    <div className="flex items-center justify-between pb-2 border-b border-gray-600">
+                                                        <h3 className="text-white font-semibold text-sm">Close board?</h3>
+                                                        <button
+                                                            onClick={cancelCloseBoard}
+                                                            className="text-gray-400 hover:text-white transition-colors rounded"
+                                                        >
+                                                            <X className="w-4 h-4 cursor-pointer" />
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-gray-300 text-xs mb-3 pt-2 leading-relaxed">
+                                                        You can find and reopen closed boards at the bottom of{' '}
+                                                        <span className="text-blue-400 underline cursor-pointer">your boards page</span>.
+                                                    </p>
                                                     <button
-                                                        onClick={cancelCloseBoard}
-                                                        className="text-gray-400 hover:text-white transition-colors rounded"
+                                                        onClick={confirmCloseBoard}
+                                                        className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm font-medium transition-colors"
                                                     >
-                                                        <X className="w-4 h-4 cursor-pointer" />
+                                                        Close
                                                     </button>
                                                 </div>
-                                                <p className="text-gray-300 text-xs mb-3 pt-2 leading-relaxed">
-                                                    You can find and reopen closed boards at the bottom of{' '}
-                                                    <span className="text-blue-400 underline cursor-pointer">your boards page</span>.
-                                                </p>
-                                                <button
-                                                    onClick={confirmCloseBoard}
-                                                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm font-medium transition-colors"
-                                                >
-                                                    Close
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                            : 
+                            <>
+                                {/* Archived Items Modal */}
+                                <ArchivedItemsModal
+                                    onClose={handleCloseMenu}
+                                    onBack={handleBackToMenu}
+                                    archivedCards={mockArchivedCards}
+                                    archivedLists={mockArchivedLists}
+                                    onRestoreCard={handleRestoreCard}
+                                    onRestoreList={handleRestoreList}
+                                    onDeleteCard={handleDeleteCard}
+                                    onDeleteList={handleDeleteList}
+                                />
+                            </>
+                        }
+
                     </>
                 )}
 
@@ -303,19 +317,6 @@ const BoardNavbar = () => {
                         </div>
                     </>
                 )}
-
-                {/* Archived Items Modal */}
-                <ArchivedItemsModal
-                    isOpen={showArchivedItems}
-                    onClose={handleCloseArchivedItems}
-                    onBack={handleBackToMenu}
-                    archivedCards={mockArchivedCards}
-                    archivedLists={mockArchivedLists}
-                    onRestoreCard={handleRestoreCard}
-                    onRestoreList={handleRestoreList}
-                    onDeleteCard={handleDeleteCard}
-                    onDeleteList={handleDeleteList}
-                />
             </div>
         </div>
     );
