@@ -2,7 +2,7 @@ import { notify } from "@/services/toastService";
 import { deleteWorkspace, getWorkspaceById } from "@/services/workspaceService";
 import type { WorkSpace } from "@/types/workspace";
 import { EarthIcon, LockKeyhole } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Setting = () => {
@@ -44,11 +44,11 @@ const Setting = () => {
             setShowDeleteModal(false);
             setDeleteInputValue('');
             await deleteWorkspace(Number(id))
-            .then(data => {
-                notify.success(data.message);
-                navigate('/')
-            })
-            .catch(err => notify.error(err?.message));
+                .then(data => {
+                    notify.success(data.message);
+                    navigate('/')
+                })
+                .catch(err => notify.error(err?.message));
         }
     };
 
@@ -57,7 +57,7 @@ const Setting = () => {
         setDeleteInputValue('');
     };
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         fetchWorkspaceDetail();
     }, [id]);
 
@@ -87,19 +87,19 @@ const Setting = () => {
                 <div className="flex items-center justify-between p-4 rounded-lg">
                     <div className="flex items-center gap-2">
                         {
-                            selectedVisibility === 'private' ? 
-                            <>
-                                <LockKeyhole />
-                                <span className="text-sm">Private – This Workspace is private. It's not indexed or visible to those outside the Workspace.</span>
-                            </> : 
-                            <>
-                                <EarthIcon />
-                                <span className="text-sm"> Public – This Workspace is public. It's visible to anyone with the link and will show up in search engines like Google. Only those invited to the Workspace can add and edit Workspace boards.</span>
-                            </>
+                            selectedVisibility === 'private' ?
+                                <>
+                                    <LockKeyhole />
+                                    <span className="text-sm">Private – This Workspace is private. It's not indexed or visible to those outside the Workspace.</span>
+                                </> :
+                                <>
+                                    <EarthIcon />
+                                    <span className="text-sm"> Public – This Workspace is public. It's visible to anyone with the link and will show up in search engines like Google. Only those invited to the Workspace can add and edit Workspace boards.</span>
+                                </>
                         }
                     </div>
                     <div className="relative">
-                        <button 
+                        <button
                             onClick={() => setShowModal(true)}
                             className="text-blue-400 cursor-pointer hover:text-blue-300 text-sm font-medium">
                             Change

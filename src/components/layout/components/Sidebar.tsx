@@ -3,7 +3,7 @@ import { getWorkspaces } from '@/services/workspaceService';
 import type { WorkSpace } from '@/types/workspace';
 import clsx from 'clsx';
 import { Folders, House, LayoutTemplate, ChevronDown, ChevronRight, Settings } from 'lucide-react';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navigationItems = [
@@ -62,7 +62,7 @@ const Sidebar = () => {
             .catch(err => notify.error(err?.message))
     }
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         // Load expanded workspace IDs from localStorage
         const saved = localStorage.getItem('expandedWorkspaceIds');
         if (saved) {
@@ -80,7 +80,7 @@ const Sidebar = () => {
     }, []);
 
     const handleExpandWorkspace = (workspaceId: number | undefined) => {
-        if(!workspaceId) return;
+        if (!workspaceId) return;
         setExpandedWorkspaceIds(prev => {
             let newExpandedIds;
 

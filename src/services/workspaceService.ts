@@ -72,7 +72,7 @@ const deleteBoard = async (id: number): Promise<ApiResponse<null>> => {
 };
 
 const getClosedBoards = async (): Promise<ApiResponse<WorkSpace[]>> => {
-    return axiosClients.get(`${baseUrl + projectUrl}/deleted`);
+    return axiosClients.get(`${baseUrl + projectUrl}/completed`);
 };
 
 export { getWorkspaces, createWorkspace, updateWorkspace, getWorkspaceById, deleteWorkspace, getBoards, createBoard, completedBoard, reopenBoard, deleteBoard, getClosedBoards };
