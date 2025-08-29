@@ -2,6 +2,8 @@ import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import LoadingContent from '@/components/ui/LoadingContent';
+import { notify } from '@/services/toastService';
+import { reopenBoard } from '@/services/workspaceService';
 import type { Column, Item } from '@/types';
 import {
     DndContext,
@@ -22,8 +24,9 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import { GripVertical, Plus } from 'lucide-react';
+import { GripVertical, Plus, Lock, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 const mockColumns = [
     {
@@ -54,8 +57,10 @@ const mockColumns = [
 ]
 
 const WorkspaceBoard = () => {
-    const [columns, setColumns] = useState<Column[]>([]);
 
+    const { boardId } = useParams();
+    const [isBoardClosed, setIsBoardClosed] = useState(false);
+    const [columns, setColumns] = useState<Column[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
     const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
@@ -68,7 +73,7 @@ const WorkspaceBoard = () => {
         setTimeout(() => {
             setColumns(mockColumns);
             setIsLoading(false);
-        }, 3000)
+        }, 1000)
     }, []);
 
     // OPTIMIZATION: Track dragging state separately from active elements
@@ -129,17 +134,20 @@ const WorkspaceBoard = () => {
             }
         };
 
-        if (activeInputColumnId) {
+        if (activeInputColumnId && !isBoardClosed) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [activeInputColumnId]);
+    }, [activeInputColumnId, isBoardClosed]);
 
     const handleDragStart = useCallback(
         (event: DragStartEvent) => {
+            // Prevent drag operations when board is closed
+            if (isBoardClosed) return;
+
             setActiveId(event.active.id);
             setIsDragging(true);
 
@@ -158,7 +166,7 @@ const WorkspaceBoard = () => {
             setActiveInputColumnId(null);
             setCardTitle('');
         },
-        [columns]
+        [columns, isBoardClosed]
     );
 
     // OPTIMIZATION: Heavily optimized drag over with batching and debouncing
@@ -166,7 +174,7 @@ const WorkspaceBoard = () => {
         (event: DragOverEvent) => {
             const { active, over } = event;
 
-            if (!over || !isDragging) return;
+            if (!over || !isDragging || isBoardClosed) return;
 
             const activeId = active.id;
             const overId = over.id;
@@ -294,7 +302,7 @@ const WorkspaceBoard = () => {
                 }
             }, 16); // OPTIMIZATION: 16ms delay = ~60fps batching
         },
-        [isDragging]
+        [isDragging, isBoardClosed]
     );
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -310,6 +318,12 @@ const WorkspaceBoard = () => {
         setIsDragging(false);
         setDragType(null);
         lastDragOperationRef.current = '';
+
+        // If board is closed, restore original state and return
+        if (isBoardClosed) {
+            setColumns(dragStateRef.current.originalColumns);
+            return;
+        }
 
         if (!over) {
             // Restore original state if cancelled
@@ -385,19 +399,23 @@ const WorkspaceBoard = () => {
                 return prevColumns;
             });
         }
-    }, []);
+    }, [isBoardClosed]);
 
     const addColumn = useCallback(() => {
+        if (isBoardClosed) return;
+
         const newColumn: Column = {
             id: `col-${Date.now()}`,
             title: `New Column`,
             items: [],
         };
         setColumns(pre => [...pre, newColumn]);
-    }, []);
+    }, [isBoardClosed]);
 
     const handleUpdateColumnTitle = useCallback(
         (columnId: string, newTitle: string) => {
+            if (isBoardClosed) return;
+
             setColumns(columns =>
                 columns.map(column =>
                     column.id === columnId
@@ -406,11 +424,13 @@ const WorkspaceBoard = () => {
                 )
             );
         },
-        []
+        [isBoardClosed]
     );
 
     const deleteColumn = useCallback(
         (columnId: string) => {
+            if (isBoardClosed) return;
+
             setColumns(columns =>
                 columns.filter(column => column.id !== columnId)
             );
@@ -419,16 +439,20 @@ const WorkspaceBoard = () => {
                 setCardTitle('');
             }
         },
-        [activeInputColumnId]
+        [activeInputColumnId, isBoardClosed]
     );
 
     const handleStartAddingCard = useCallback((columnId: string) => {
+        if (isBoardClosed) return;
+
         setActiveInputColumnId(columnId);
         setCardTitle('');
-    }, []);
+    }, [isBoardClosed]);
 
     const handleSubmitCard = useCallback(
         async (columnId: string) => {
+            if (isBoardClosed) return;
+
             setActiveInputColumnId(null);
             setCardTitle('');
             if (cardTitle.trim()) {
@@ -446,7 +470,7 @@ const WorkspaceBoard = () => {
                 );
             }
         },
-        [cardTitle]
+        [cardTitle, isBoardClosed]
     );
 
     const handleCancelCard = useCallback(() => {
@@ -455,21 +479,25 @@ const WorkspaceBoard = () => {
     }, []);
 
     const deleteItem = useCallback((itemId: string) => {
+        if (isBoardClosed) return;
+
         setColumns(columns =>
             columns.map(column => ({
                 ...column,
                 items: column.items.filter(item => item.id !== itemId),
             }))
         );
-    }, []);
+    }, [isBoardClosed]);
 
     const handleArchiveColumn = useCallback((columnId: string) => {
+        if (isBoardClosed) return;
         console.log("archived column", columnId);
-    }, []);
+    }, [isBoardClosed]);
 
     const handleArchiveAllItemInColumns = useCallback((columnId: string) => {
+        if (isBoardClosed) return;
         console.log("archived all items", columnId);
-    }, []);
+    }, [isBoardClosed]);
 
     const handleHideDetailModal = useCallback(() => {
         setShowDetailModal(false);
@@ -477,6 +505,16 @@ const WorkspaceBoard = () => {
 
     const handleShowDetailModal = useCallback(() => {
         setShowDetailModal(true);
+    }, []);
+
+    const handleReopenBoard = useCallback( async () => {
+        setIsLoading(true);
+        await reopenBoard(Number(boardId))
+            .then(data => {
+                notify.success(data.message);
+                setIsLoading(false);
+                setIsBoardClosed(false);
+            });
     }, []);
 
     // OPTIMIZATION: Memoize column props to prevent unnecessary rerenders
@@ -488,96 +526,119 @@ const WorkspaceBoard = () => {
                 items: col.items,
                 isAddingCard: activeInputColumnId === col.id,
                 isDragging: isDragging && dragType === 'item',
+                isBoardClosed: isBoardClosed,
             })),
-        [columns, activeInputColumnId, isDragging, dragType]
+        [columns, activeInputColumnId, isDragging, dragType, isBoardClosed]
     );
 
     return (
         <div className='bg-[#283449] w-full h-full flex flex-col'>
             {
-                isLoading ? 
-                <LoadingContent /> : 
-                <>
-                    <BoardNavbar />
-                    <div className='grow overflow-hidden'>
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={pointerWithin}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
-                                <SortableContext
-                                    items={columnIds}
-                                    strategy={horizontalListSortingStrategy}
-                                >
-                                    {columnProps.map(col => (
-                                        <DroppableColumn
-                                            key={col.key}
-                                            column={col.column}
-                                            items={col.items}
-                                            isAddingCard={col.isAddingCard}
-                                            cardTitle={cardTitle}
-                                            setCardTitle={setCardTitle}
-                                            onStartAddingCard={handleStartAddingCard}
-                                            onSubmitCard={handleSubmitCard}
-                                            onCancelCard={handleCancelCard}
-                                            onDeleteItem={deleteItem}
-                                            onDeleteColumn={deleteColumn}
-                                            onUpdateColumnTitle={handleUpdateColumnTitle}
-                                            onArchiveColumn={handleArchiveColumn}
-                                            onArchiveAllItems={handleArchiveAllItemInColumns}
-                                            handleShowDetailTask={handleShowDetailModal}
-                                        />
-                                    ))}
-                                </SortableContext>
-        
+                isLoading ?
+                    <div className="mt-6">
+                        <LoadingContent />
+                    </div> : 
+                    <>
+                        {/* Board Closed Banner */}
+                        {isBoardClosed && (
+                            <div className='bg-red-500 text-white px-4 py-3 flex items-center justify-between'>
+                                <div className='flex items-center gap-2'>
+                                    <Lock size={18} />
+                                    <span className='font-medium'>
+                                        This board is closed. Reopen the board to make changes.
+                                    </span>
+                                </div>
                                 <button
-                                    onClick={addColumn}
-                                    className='bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white'
+                                    onClick={handleReopenBoard}
+                                    className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors font-medium'
                                 >
-                                    <Plus size={20} />
-                                    Add another column
+                                    <Unlock size={16} />
+                                    Reopen board
                                 </button>
                             </div>
-                            <DragOverlay>
-                                {activeElements.activeColumn ? (
-                                    <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
-                                        <div className='flex items-center gap-2 mb-4'>
-                                            <GripVertical
-                                                size={16}
-                                                className='text-gray-400'
+                        )}
+                        <BoardNavbar isBoardClosed={isBoardClosed} />
+
+                        <div className={`grow overflow-hidden ${isBoardClosed ? 'pointer-events-none opacity-60' : ''}`}>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={pointerWithin}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
+                                    <SortableContext
+                                        items={columnIds}
+                                        strategy={horizontalListSortingStrategy}
+                                    >
+                                        {columnProps.map(col => (
+                                            <DroppableColumn
+                                                key={col.key}
+                                                column={col.column}
+                                                items={col.items}
+                                                isAddingCard={col.isAddingCard}
+                                                cardTitle={cardTitle}
+                                                setCardTitle={setCardTitle}
+                                                onStartAddingCard={handleStartAddingCard}
+                                                onSubmitCard={handleSubmitCard}
+                                                onCancelCard={handleCancelCard}
+                                                onDeleteItem={deleteItem}
+                                                onDeleteColumn={deleteColumn}
+                                                onUpdateColumnTitle={handleUpdateColumnTitle}
+                                                onArchiveColumn={handleArchiveColumn}
+                                                onArchiveAllItems={handleArchiveAllItemInColumns}
+                                                handleShowDetailTask={handleShowDetailModal}
                                             />
-                                            <h3 className='font-semibold text-white'>
-                                                {activeElements.activeColumn.title}
-                                            </h3>
-                                            <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
-                                                {
-                                                    activeElements.activeColumn.items
-                                                        .length
-                                                }
+                                        ))}
+                                    </SortableContext>
+
+                                    <button
+                                        onClick={addColumn}
+                                        className={`bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white ${isBoardClosed ? 'cursor-not-allowed' : ''}`}
+                                        disabled={isBoardClosed}
+                                    >
+                                        <Plus size={20} />
+                                        Add another column
+                                    </button>
+                                </div>
+                                <DragOverlay>
+                                    {!isBoardClosed && activeElements.activeColumn ? (
+                                        <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
+                                            <div className='flex items-center gap-2 mb-4'>
+                                                <GripVertical
+                                                    size={16}
+                                                    className='text-gray-400'
+                                                />
+                                                <h3 className='font-semibold text-white'>
+                                                    {activeElements.activeColumn.title}
+                                                </h3>
+                                                <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
+                                                    {
+                                                        activeElements.activeColumn.items
+                                                            .length
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : !isBoardClosed && activeElements.activeItem ? (
+                                        <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
+                                            <span className='text-sm text-white whitespace-pre-wrap break-words'>
+                                                {activeElements.activeItem.content}
                                             </span>
                                         </div>
-                                    </div>
-                                ) : activeElements.activeItem ? (
-                                    <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
-                                        <span className='text-sm text-white whitespace-pre-wrap break-words'>
-                                            {activeElements.activeItem.content}
-                                        </span>
-                                    </div>
-                                ) : null}
-                            </DragOverlay>
-                        </DndContext>
-                    </div>
-                    {
-                        showDetailModal && 
-                        <TaskDetailModal
-                            onClose={handleHideDetailModal}
-                            item={{ id: '1', content: 'Hello' }}
-                        />
-                    }
-                </>
+                                    ) : null}
+                                </DragOverlay>
+                            </DndContext>
+                        </div>
+                        {
+                            showDetailModal &&
+                            <TaskDetailModal
+                                onClose={handleHideDetailModal}
+                                item={{ id: '1', content: 'Hello' }}
+                            />
+                        }
+                    </>
             }
         </div>
     );

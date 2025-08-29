@@ -1,5 +1,5 @@
 import { Folder, X } from 'lucide-react';
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import LoadingContent from '../ui/LoadingContent';
 import type { WorkSpace } from '@/types/workspace';
 import { deleteBoard, getClosedBoards, reopenBoard } from '@/services/workspaceService';
@@ -16,7 +16,7 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
 
     const [closedBoards, setClosedBoards] = useState<WorkSpace[]>([]);
     const [loadingClosedModal, setLoadingClosedModal] = useState(false);
-    const [activeConfirmation, setActiveConfirmation] = useState<{id: number, type: 'delete' | 'reopen'} | null>(null);
+    const [activeConfirmation, setActiveConfirmation] = useState<{ id: number, type: 'delete' | 'reopen' } | null>(null);
 
     const fetchClosedBoards = async () => {
         setLoadingClosedModal(true);
@@ -50,7 +50,7 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
         setActiveConfirmation(null);
     };
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         fetchClosedBoards();
     }, []);
 
@@ -91,7 +91,7 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
                                 ) : (
                                     <div className="relative space-y-3">
                                         {closedBoards.map((board) => (
-                                            <ClosedBoardItem 
+                                            <ClosedBoardItem
                                                 key={board.id}
                                                 workspace={board}
                                                 handleDeleteBoard={handleDeleteBoard}
@@ -103,7 +103,7 @@ const ClosedBoards: React.FC<ClosedBoardsProp> = ({
                                         ))}
                                     </div>
                                 )
-                            }
+                        }
                     </div>
                 </div>
             </div>

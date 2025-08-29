@@ -1,7 +1,7 @@
 import ClosedBoards from "@/components/board/ClosedBoards";
 import CreateBoard from "@/components/shared/CreateBoard";
 import { notify } from "@/services/toastService";
-import { getBoards, getWorkspaceById, updateWorkspace } from "@/services/workspaceService";
+import { getBoards, getClosedBoards, getWorkspaceById, updateWorkspace } from "@/services/workspaceService";
 import type { Board } from "@/types/project";
 import type { WorkSpace } from "@/types/workspace";
 import { Pencil, Users } from "lucide-react";
@@ -21,6 +21,7 @@ const Boards = () => {
     });
     const [workspaceEditData, setWorkspaceEditData] = useState<WorkSpace>(workspaceData);
     const [boards, setBoards] = useState<Board[]>([]);
+    const [closedBoards, setClosedBoards] = useState<WorkSpace[]>([]);
     const [isEditingWorkspace, setIsEditingWorkspace] = useState(false);
     const [workspaceNameError, setWorkspaceNameError] = useState('');
     const [workspaceDescriptionError, setWorkspaceDescriptionError] = useState('');
@@ -88,7 +89,7 @@ const Boards = () => {
             .catch(_ => navigate('/not-found'));
     };
 
-    const fetchBoards = async () => {
+    const fetchBoards = async () => {   
         if (!id) return;
         return await getBoards(Number(id))
             .then(data => {
@@ -97,11 +98,20 @@ const Boards = () => {
             .catch(err => console.log(err))
     };
 
+    const fetchClosedBoards = async () => {
+        await getClosedBoards()
+            .then(data => {
+                data?.data && setClosedBoards(data.data)
+            })
+            .catch(err => notify.error(err?.message))
+    };
+
     useEffect(() => {
         if (!id) return;
         Promise.all([
             fetchWorkspaceDetail(),
-            fetchBoards()
+            fetchBoards(),
+            fetchClosedBoards()
         ]);
     }, [id]);
 
@@ -217,6 +227,29 @@ const Boards = () => {
                     >
                         View closed boards
                     </button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
+                        {/* Existing boards */}
+                        {closedBoards?.map(board => (
+                            <div
+                                key={board.id}
+                                onClick={() => handleBoardNavigate(board.id)}
+                                className={`
+                                        flex items-end
+                                        h-24 rounded-lg cursor-pointer overflow-hidden
+                                        hover:opacity-90 transition-opacity `}
+                                style={{
+                                    backgroundImage: `url(${backgroundImage})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center'
+                                }}
+                            >
+                                <div className="grow p-2 bg-black/50 flex items-end justify-between">
+                                    <h3 className="text-white font-medium text-sm">{board.name}</h3>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
                     {/* Closed Boards Modal */}
                     {showClosedBoards && 

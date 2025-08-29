@@ -49,10 +49,15 @@ const mockArchivedLists = [
     }
 ];
 
-const BoardNavbar = () => {
+interface BoardNavbarProps {
+    isBoardClosed: boolean;
+}
+
+const BoardNavbar: React.FC<BoardNavbarProps> = ({
+    isBoardClosed
+}) => {
 
     const { wsId, boardId } = useParams();
-    
     const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
@@ -107,7 +112,7 @@ const BoardNavbar = () => {
     };
 
     return (
-        <div className='h-[50px] flex items-center justify-between bg-[#28303E] p-4'>
+        <div className={`${isBoardClosed ? 'pointer-events-none opacity-60' : ''} h-[50px] flex items-center justify-between bg-[#28303E] p-4`}>
             <h1 className='text-xl font-bold text-white mb-2'>
                 Smart TaskHub
             </h1>
