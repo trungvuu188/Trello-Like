@@ -24,14 +24,14 @@ interface DroppableColumnProps {
     isAddingCard: boolean;
     cardTitle: string;
     setCardTitle: (title: string) => void;
-    onStartAddingCard: (columnId: string) => void;
-    onSubmitCard: (columnId: string) => void;
+    onStartAddingCard: (columnId: number) => void;
+    onSubmitCard: (columnId: number) => void;
     onCancelCard: () => void;
-    onDeleteItem: (itemId: string) => void;
-    onDeleteColumn: (columnId: string) => void;
-    onUpdateColumnTitle: (columnId: string, newTitle: string) => void;
-    onArchiveColumn: (columnId: string) => void;
-    onArchiveAllItems: (columnId: string) => void;
+    onDeleteItem: (itemId: number) => void;
+    onDeleteColumn: (columnId: number) => void;
+    onUpdateColumnTitle: (columnId: number, newTitle: string) => void;
+    onArchiveColumn: (columnId: number) => void;
+    onArchiveAllItems: (columnId: number) => void;
     handleShowDetailTask: () => void;
 }
 
@@ -52,7 +52,7 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
 }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-    const [titleValue, setTitleValue] = useState(column.title);
+    const [titleValue, setTitleValue] = useState(column.name);
     const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
@@ -161,13 +161,13 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
     }, [isAddingCard, showOptionsMenu, onCancelCard]);
 
     const handleTitleSubmit = useCallback(() => {
-        if (titleValue.trim() && titleValue.trim() !== column.title) {
+        if (titleValue.trim() && titleValue.trim() !== column.name) {
             onUpdateColumnTitle(column.id, titleValue.trim());
         } else {
-            setTitleValue(column.title); // Reset to original if empty or unchanged
+            setTitleValue(column.name); // Reset to original if empty or unchanged
         }
         setIsEditingTitle(false);
-    }, [titleValue, column.title, column.id, onUpdateColumnTitle]);
+    }, [titleValue, column.name, column.id, onUpdateColumnTitle]);
 
     const handleTitleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
@@ -175,11 +175,11 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
                 e.preventDefault();
                 handleTitleSubmit();
             } else if (e.key === 'Escape') {
-                setTitleValue(column.title); // Reset to original
+                setTitleValue(column.name); // Reset to original
                 setIsEditingTitle(false);
             }
         },
-        [handleTitleSubmit, column.title]
+        [handleTitleSubmit, column.name]
     );
 
     const handleRemoveUrlPreview = useCallback(() => {
@@ -261,7 +261,7 @@ const DroppableColumnComponent: React.FC<DroppableColumnProps> = ({
                             className='font-semibold text-[#B6C2CF] cursor-pointer border border-transparent hover:bg-[#22272B] rounded px-2 py-1 -mx-2 -my-1 transition-colors flex-1'
                             onClick={handleTitleDisplay}
                         >
-                            {column.title}
+                            {column.name}
                         </h3>
                     )}
                 </div>
@@ -362,7 +362,7 @@ const arePropsEqual = (
         prevProps.isAddingCard !== nextProps.isAddingCard ||
         prevProps.cardTitle !== nextProps.cardTitle ||
         prevProps.column.id !== nextProps.column.id ||
-        prevProps.column.title !== nextProps.column.title
+        prevProps.column.name !== nextProps.column.name
     ) {
         return false;
     }
