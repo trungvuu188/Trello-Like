@@ -5,8 +5,7 @@ import axiosClients from './axiosClient';
 import type { Board } from '@/types/project';
 
 const baseUrl = '/workspaces';
-const projectUrl = '/projects'
-
+const projectUrl = '/projects';
 
 // Create a new workspace
 const createWorkspace = async (
@@ -60,19 +59,19 @@ const createBoard = async (
 };
 
 const completedBoard = async (id: number): Promise<ApiResponse<null>> => {
-    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/complete`);
+    return axiosClients.patch(`${projectUrl}/${id}/completed`);
 };
 
 const reopenBoard = async (id: number): Promise<ApiResponse<null>> => {
-    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/reopen`);
+    return axiosClients.patch(`${projectUrl}/${id}/reopen`);
 };
 
 const deleteBoard = async (id: number): Promise<ApiResponse<null>> => {
-    return axiosClients.patch(`${baseUrl + projectUrl}/${id}/delete`);
+    return axiosClients.patch(`${projectUrl}/${id}/delete`);
 };
 
 const getClosedBoards = async (): Promise<ApiResponse<WorkSpace[]>> => {
-    return axiosClients.get(`${baseUrl + projectUrl}/completed`);
+    return axiosClients.get(`${projectUrl}/completed`);
 };
 
 export { getWorkspaces, createWorkspace, updateWorkspace, getWorkspaceById, deleteWorkspace, getBoards, createBoard, completedBoard, reopenBoard, deleteBoard, getClosedBoards };

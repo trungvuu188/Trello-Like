@@ -2,6 +2,7 @@ import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import LoadingContent from '@/components/ui/LoadingContent';
+import { createNewColumn, fetchBoardDetail, updateColumn } from '@/services/boardService';
 import { notify } from '@/services/toastService';
 import { reopenBoard } from '@/services/workspaceService';
 import type { Column, Item } from '@/types';
@@ -28,33 +29,33 @@ import { GripVertical, Plus, Lock, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-const mockColumns = [
-    {
-        id: 'col-1',
-        title: 'Backlog',
-        items: [
-            { id: 'item-1', content: 'Design the new landing page' },
-            { id: 'item-2', content: 'Set up database schema' },
-            { id: 'item-3', content: 'Write API auth' },
-        ],
-    },
-    {
-        id: 'col-2',
-        title: 'To do',
-        items: [
-            { id: 'item-4', content: 'Security config' },
-            { id: 'item-5', content: 'Responsive for layout' },
-        ],
-    },
-    {
-        id: 'col-3',
-        title: 'Process',
-        items: [
-            { id: 'item-6', content: 'Unit testing' },
-            { id: 'item-7', content: 'CI/CD with Github Action' },
-        ],
-    },
-]
+// const mockColumns = [
+//     {
+//         id: 'col-1',
+//         title: 'Backlog',
+//         items: [
+//             { id: 'item-1', content: 'Design the new landing page' },
+//             { id: 'item-2', content: 'Set up database schema' },
+//             { id: 'item-3', content: 'Write API auth' },
+//         ],
+//     },
+//     {
+//         id: 'col-2',
+//         title: 'To do',
+//         items: [
+//             { id: 'item-4', content: 'Security config' },
+//             { id: 'item-5', content: 'Responsive for layout' },
+//         ],
+//     },
+//     {
+//         id: 'col-3',
+//         title: 'Process',
+//         items: [
+//             { id: 'item-6', content: 'Unit testing' },
+//             { id: 'item-7', content: 'CI/CD with Github Action' },
+//         ],
+//     },
+// ]
 
 const WorkspaceBoard = () => {
 
@@ -63,18 +64,10 @@ const WorkspaceBoard = () => {
     const [columns, setColumns] = useState<Column[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-    const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
+    const [activeInputColumnId, setActiveInputColumnId] = useState<number | null>(null);
     const [cardTitle, setCardTitle] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        setIsLoading(true);
-        setTimeout(() => {
-            setColumns(mockColumns);
-            setIsLoading(false);
-        }, 1000)
-    }, []);
 
     // OPTIMIZATION: Track dragging state separately from active elements
     const [isDragging, setIsDragging] = useState(false);
@@ -117,11 +110,27 @@ const WorkspaceBoard = () => {
         const activeItem = activeColumn
             ? null
             : columns
-                .flatMap(col => col.items)
+                .flatMap(col => col.tasks)
                 .find(item => item.id === activeId);
 
         return { activeColumn, activeItem };
     }, [activeId, columns]);
+
+    const fetchBoardData = async () => {
+        setIsLoading(true);
+        await fetchBoardDetail(Number(boardId))
+            .then(data => {
+                setColumns(data.data);
+            })
+            .catch(err => {
+                notify.error(err.response?.data?.message);
+            })
+            setIsLoading(false);
+    }
+
+    useEffect(() => {
+        fetchBoardData();
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -208,10 +217,10 @@ const WorkspaceBoard = () => {
                 // Item over item (different column)
                 if (isActiveAnItem && isOverAnItem) {
                     const activeColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === activeId)
+                        col.tasks.find(item => item.id === activeId)
                     );
                     const overColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === overId)
+                        col.tasks.find(item => item.id === overId)
                     );
 
                     if (
@@ -224,22 +233,22 @@ const WorkspaceBoard = () => {
                         };
                         const overColumn = { ...newColumns[overColumnIndex] };
 
-                        const activeItemIndex = activeColumn.items.findIndex(
+                        const activeItemIndex = activeColumn.tasks.findIndex(
                             item => item.id === activeId
                         );
-                        const overItemIndex = overColumn.items.findIndex(
+                        const overItemIndex = overColumn.tasks.findIndex(
                             item => item.id === overId
                         );
 
                         if (activeItemIndex !== -1 && overItemIndex !== -1) {
-                            activeColumn.items = [...activeColumn.items];
-                            overColumn.items = [...overColumn.items];
+                            activeColumn.tasks = [...activeColumn.tasks];
+                            overColumn.tasks = [...overColumn.tasks];
 
-                            const [activeItem] = activeColumn.items.splice(
+                            const [activeItem] = activeColumn.tasks.splice(
                                 activeItemIndex,
                                 1
                             );
-                            overColumn.items.splice(
+                            overColumn.tasks.splice(
                                 overItemIndex,
                                 0,
                                 activeItem
@@ -255,7 +264,7 @@ const WorkspaceBoard = () => {
                 // Item over column
                 if (isActiveAnItem && isOverAColumn) {
                     const activeColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === activeId)
+                        col.tasks.find(item => item.id === activeId)
                     );
                     const overColumnIndex = newColumns.findIndex(
                         col => col.id === overId
@@ -271,19 +280,19 @@ const WorkspaceBoard = () => {
                         };
                         const overColumn = { ...newColumns[overColumnIndex] };
 
-                        const activeItemIndex = activeColumn.items.findIndex(
+                        const activeItemIndex = activeColumn.tasks.findIndex(
                             item => item.id === activeId
                         );
 
                         if (activeItemIndex !== -1) {
-                            activeColumn.items = [...activeColumn.items];
-                            overColumn.items = [...overColumn.items];
+                            activeColumn.tasks = [...activeColumn.tasks];
+                            overColumn.tasks = [...overColumn.tasks];
 
-                            const [activeItem] = activeColumn.items.splice(
+                            const [activeItem] = activeColumn.tasks.splice(
                                 activeItemIndex,
                                 1
                             );
-                            overColumn.items.push(activeItem);
+                            overColumn.tasks.push(activeItem);
 
                             newColumns[activeColumnIndex] = activeColumn;
                             newColumns[overColumnIndex] = overColumn;
@@ -365,10 +374,10 @@ const WorkspaceBoard = () => {
         if (isActiveAnItem && isOverAnItem) {
             setColumns(prevColumns => {
                 const activeColumnIndex = prevColumns.findIndex(col =>
-                    col.items.find(item => item.id === activeId)
+                    col.tasks.find(item => item.id === activeId)
                 );
                 const overColumnIndex = prevColumns.findIndex(col =>
-                    col.items.find(item => item.id === overId)
+                    col.tasks.find(item => item.id === overId)
                 );
 
                 if (
@@ -378,16 +387,16 @@ const WorkspaceBoard = () => {
                     const newColumns = [...prevColumns];
                     const column = { ...newColumns[activeColumnIndex] };
 
-                    const activeItemIndex = column.items.findIndex(
+                    const activeItemIndex = column.tasks.findIndex(
                         item => item.id === activeId
                     );
-                    const overItemIndex = column.items.findIndex(
+                    const overItemIndex = column.tasks.findIndex(
                         item => item.id === overId
                     );
 
                     if (activeItemIndex !== -1 && overItemIndex !== -1) {
-                        column.items = arrayMove(
-                            column.items,
+                        column.tasks = arrayMove(
+                            column.tasks,
                             activeItemIndex,
                             overItemIndex
                         );
@@ -401,34 +410,26 @@ const WorkspaceBoard = () => {
         }
     }, [isBoardClosed]);
 
-    const addColumn = useCallback(() => {
+    const addColumn = useCallback( async () => {
         if (isBoardClosed) return;
 
-        const newColumn: Column = {
-            id: `col-${Date.now()}`,
-            title: `New Column`,
-            items: [],
-        };
-        setColumns(pre => [...pre, newColumn]);
+        await createNewColumn(Number(boardId), 'New Column')
+            .then(data => notify.success(data.message))
+            .catch(err => notify.success(err.response?.data?.message))
     }, [isBoardClosed]);
 
-    const handleUpdateColumnTitle = useCallback(
-        (columnId: string, newTitle: string) => {
-            if (isBoardClosed) return;
-
-            setColumns(columns =>
-                columns.map(column =>
-                    column.id === columnId
-                        ? { ...column, title: newTitle }
-                        : column
-                )
-            );
-        },
-        [isBoardClosed]
-    );
+    const handleUpdateColumnTitle = useCallback( async (columnId: number, newTitle: string) => {
+        if (isBoardClosed) return;
+        await updateColumn(Number(boardId), columnId, newTitle)
+            .then(data => {
+                console.log(isBoardClosed, activeElements.activeColumn);
+                notify.success(data.message)
+            })
+            .catch(err => notify.success(err.response?.data?.message))           
+    }, [isBoardClosed]);
 
     const deleteColumn = useCallback(
-        (columnId: string) => {
+        (columnId: number) => {
             if (isBoardClosed) return;
 
             setColumns(columns =>
@@ -442,7 +443,7 @@ const WorkspaceBoard = () => {
         [activeInputColumnId, isBoardClosed]
     );
 
-    const handleStartAddingCard = useCallback((columnId: string) => {
+    const handleStartAddingCard = useCallback((columnId: number) => {
         if (isBoardClosed) return;
 
         setActiveInputColumnId(columnId);
@@ -450,25 +451,25 @@ const WorkspaceBoard = () => {
     }, [isBoardClosed]);
 
     const handleSubmitCard = useCallback(
-        async (columnId: string) => {
+        async (columnId: number) => {
             if (isBoardClosed) return;
 
             setActiveInputColumnId(null);
             setCardTitle('');
-            if (cardTitle.trim()) {
-                const newItem: Item = {
-                    id: `item-${Date.now()}`,
-                    content: cardTitle.trim(),
-                };
+            // if (cardTitle.trim()) {
+            //     const newItem: Item = {
+            //         id: `item-${Date.now()}`,
+            //         content: cardTitle.trim(),
+            //     };
 
-                setColumns(columns =>
-                    columns.map(column =>
-                        column.id === columnId
-                            ? { ...column, items: [...column.items, newItem] }
-                            : column
-                    )
-                );
-            }
+            //     setColumns(columns =>
+            //         columns.map(column =>
+            //             column.id === columnId
+            //                 ? { ...column, items: [...column.items, newItem] }
+            //                 : column
+            //         )
+            //     );
+            // }
         },
         [cardTitle, isBoardClosed]
     );
@@ -478,23 +479,23 @@ const WorkspaceBoard = () => {
         setCardTitle('');
     }, []);
 
-    const deleteItem = useCallback((itemId: string) => {
+    const deleteItem = useCallback((itemId: number) => {
         if (isBoardClosed) return;
 
         setColumns(columns =>
             columns.map(column => ({
                 ...column,
-                items: column.items.filter(item => item.id !== itemId),
+                items: column.tasks.filter(item => item.id !== itemId),
             }))
         );
     }, [isBoardClosed]);
 
-    const handleArchiveColumn = useCallback((columnId: string) => {
+    const handleArchiveColumn = useCallback((columnId: number) => {
         if (isBoardClosed) return;
         console.log("archived column", columnId);
     }, [isBoardClosed]);
 
-    const handleArchiveAllItemInColumns = useCallback((columnId: string) => {
+    const handleArchiveAllItemInColumns = useCallback((columnId: number) => {
         if (isBoardClosed) return;
         console.log("archived all items", columnId);
     }, [isBoardClosed]);
@@ -523,7 +524,7 @@ const WorkspaceBoard = () => {
             columns.map(col => ({
                 key: col.id,
                 column: col,
-                items: col.items,
+                items: col.tasks,
                 isAddingCard: activeInputColumnId === col.id,
                 isDragging: isDragging && dragType === 'item',
                 isBoardClosed: isBoardClosed,
@@ -611,11 +612,11 @@ const WorkspaceBoard = () => {
                                                     className='text-gray-400'
                                                 />
                                                 <h3 className='font-semibold text-white'>
-                                                    {activeElements.activeColumn.title}
+                                                    {activeElements.activeColumn.name}
                                                 </h3>
                                                 <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
                                                     {
-                                                        activeElements.activeColumn.items
+                                                        activeElements.activeColumn.tasks
                                                             .length
                                                     }
                                                 </span>

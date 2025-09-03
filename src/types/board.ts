@@ -8,13 +8,13 @@ export interface UrlPreviewData {
 }
 
 export interface Item {
-    id: string;
+    id: number;
     content: string;
     urlPreview?: UrlPreviewData;
 }
 
 export interface Column {
-    id: string;
-    title: string;
-    items: Item[];
+    id: number;
+    name: string;
+    tasks: Item[];
 }
