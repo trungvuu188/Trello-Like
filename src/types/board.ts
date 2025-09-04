@@ -15,6 +15,7 @@ export interface Item {
 
 export interface Column {
     id: number;
+    position: number;
     name: string;
     tasks: Item[];
 }

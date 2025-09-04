@@ -2,10 +2,10 @@ import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import LoadingContent from '@/components/ui/LoadingContent';
-import { createNewColumn, fetchBoardDetail, updateColumn } from '@/services/boardService';
+import { archiveColumn, createNewColumn, fetchBoardDetail, updateColumn } from '@/services/boardService';
 import { notify } from '@/services/toastService';
 import { reopenBoard } from '@/services/workspaceService';
-import type { Column, Item } from '@/types';
+import type { Column } from '@/types';
 import {
     DndContext,
     DragOverlay,
@@ -28,34 +28,6 @@ import {
 import { GripVertical, Plus, Lock, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
-// const mockColumns = [
-//     {
-//         id: 'col-1',
-//         title: 'Backlog',
-//         items: [
-//             { id: 'item-1', content: 'Design the new landing page' },
-//             { id: 'item-2', content: 'Set up database schema' },
-//             { id: 'item-3', content: 'Write API auth' },
-//         ],
-//     },
-//     {
-//         id: 'col-2',
-//         title: 'To do',
-//         items: [
-//             { id: 'item-4', content: 'Security config' },
-//             { id: 'item-5', content: 'Responsive for layout' },
-//         ],
-//     },
-//     {
-//         id: 'col-3',
-//         title: 'Process',
-//         items: [
-//             { id: 'item-6', content: 'Unit testing' },
-//             { id: 'item-7', content: 'CI/CD with Github Action' },
-//         ],
-//     },
-// ]
 
 const WorkspaceBoard = () => {
 
@@ -118,14 +90,15 @@ const WorkspaceBoard = () => {
 
     const fetchBoardData = async () => {
         setIsLoading(true);
-        await fetchBoardDetail(Number(boardId))
-            .then(data => {
-                setColumns(data.data);
-            })
-            .catch(err => {
-                notify.error(err.response?.data?.message);
-            })
+        try {
+            const result = await fetchBoardDetail(Number(boardId));
+            console.log(result.data);
+            setColumns(result.data);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        } finally {
             setIsLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -413,10 +386,17 @@ const WorkspaceBoard = () => {
     const addColumn = useCallback( async () => {
         if (isBoardClosed) return;
 
-        await createNewColumn(Number(boardId), 'New Column')
-            .then(data => notify.success(data.message))
-            .catch(err => notify.success(err.response?.data?.message))
-    }, [isBoardClosed]);
+        const lastColumn = columns[columns.length - 1];
+        const newPosition = lastColumn ? lastColumn.position + 1000 : 1000;
+        
+        try {
+            const result = await createNewColumn(Number(boardId), 'New Column', newPosition)
+            notify.success(result.message);
+            await fetchBoardData();
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
+    }, [isBoardClosed, columns, boardId]);
 
     const handleUpdateColumnTitle = useCallback( async (columnId: number, newTitle: string) => {
         if (isBoardClosed) return;
@@ -490,9 +470,15 @@ const WorkspaceBoard = () => {
         );
     }, [isBoardClosed]);
 
-    const handleArchiveColumn = useCallback((columnId: number) => {
+    const handleArchiveColumn = useCallback( async (columnId: number) => {
         if (isBoardClosed) return;
-        console.log("archived column", columnId);
+        try {
+            const result = await archiveColumn(columnId);
+            notify.success(result.message); 
+            await fetchBoardData();        
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
     }, [isBoardClosed]);
 
     const handleArchiveAllItemInColumns = useCallback((columnId: number) => {

@@ -16,10 +16,10 @@ const fetchBoardDetail = async (id: number): Promise<ApiResponse<Column[]>> => {
     return axiosClients.get(`${projectUrl}/${id}/columns`);
 };
 
-const createNewColumn = async (id: number, title: string): Promise<ApiResponse<null>> => {
+const createNewColumn = async (id: number, title: string, position: number): Promise<ApiResponse<null>> => {
     return axiosClients.post(`${projectUrl}/${id}/columns`, {
         name: title,
-        position: 2
+        position
     });
 };
 
@@ -29,4 +29,16 @@ const updateColumn = async (id: number, boardId: number, name: string): Promise<
     });
 };
 
-export { fetchUrlPreview, fetchBoardDetail, createNewColumn, updateColumn };
+const archiveColumn = async (columnId: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`/columns/${columnId}/archive`);
+};
+
+const restoreColumn = async (columnId: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`/columns/${columnId}/restore`);
+};
+
+const deleteColumn = async (columnId: number): Promise<ApiResponse<null>> => {
+    return axiosClients.delete(`/columns/${columnId}`);
+};
+
+export { fetchUrlPreview, fetchBoardDetail, createNewColumn, updateColumn, archiveColumn, restoreColumn, deleteColumn };
