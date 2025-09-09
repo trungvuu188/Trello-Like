@@ -7,6 +7,12 @@ export interface UrlPreviewData {
     favicon?: string;
 }
 
+export interface Board {
+    id: number;
+    name: string;
+    status: "active" | "completed" | "deleted" | undefined
+}
+
 export interface Item {
     id: number;
     content: string;

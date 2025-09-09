@@ -59,7 +59,7 @@ const createBoard = async (
 };
 
 const completedBoard = async (id: number): Promise<ApiResponse<null>> => {
-    return axiosClients.patch(`${projectUrl}/${id}/completed`);
+    return axiosClients.patch(`${projectUrl}/${id}/complete`);
 };
 
 const reopenBoard = async (id: number): Promise<ApiResponse<null>> => {

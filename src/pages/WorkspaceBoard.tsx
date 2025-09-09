@@ -2,13 +2,14 @@ import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import LoadingContent from '@/components/ui/LoadingContent';
-import { archiveColumn, createNewColumn, fetchBoardDetail, updateColumn } from '@/services/boardService';
+import { archiveColumn, createNewColumn, fetchBoardColumns, fetchBoardDetail, updateColumn, updateColumnPosititon } from '@/services/boardService';
 import { notify } from '@/services/toastService';
 import { reopenBoard } from '@/services/workspaceService';
-import type { Column } from '@/types';
+import type { Board, Column } from '@/types';
 import {
     DndContext,
     DragOverlay,
+    KeyboardCode,
     KeyboardSensor,
     PointerSensor,
     pointerWithin,
@@ -33,6 +34,7 @@ const WorkspaceBoard = () => {
 
     const { boardId } = useParams();
     const [isBoardClosed, setIsBoardClosed] = useState(false);
+    const [boardDetail, setBoardDetail] = useState<Board>({ id: 0, name: '', status: undefined });
     const [columns, setColumns] = useState<Column[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -40,6 +42,18 @@ const WorkspaceBoard = () => {
     const [cardTitle, setCardTitle] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const ws = new WebSocket("http://localhost:9000/ws");
+
+    ws.onopen = () => {
+        console.log("Connected to WS");
+        ws.send(JSON.stringify({ type: "ping" }));
+    };
+
+    ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        console.log("Received:", msg);
+    };
 
     // OPTIMIZATION: Track dragging state separately from active elements
     const [isDragging, setIsDragging] = useState(false);
@@ -68,6 +82,13 @@ const WorkspaceBoard = () => {
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
+        }),
+        useSensor(KeyboardSensor, {
+            keyboardCodes: {
+            start: [KeyboardCode.Enter],
+            cancel: [KeyboardCode.Esc],
+            end: [KeyboardCode.Enter],
+            },
         })
     );
 
@@ -91,9 +112,13 @@ const WorkspaceBoard = () => {
     const fetchBoardData = async () => {
         setIsLoading(true);
         try {
-            const result = await fetchBoardDetail(Number(boardId));
-            console.log(result.data);
-            setColumns(result.data);
+            const boardData = await fetchBoardDetail(Number(boardId));
+            setBoardDetail(boardData.data);
+            setIsBoardClosed(boardData.data?.status === 'completed');
+            if (boardData.data?.status === 'active') {
+                const columnsData = await fetchBoardColumns(Number(boardId));
+                setColumns(columnsData.data);
+            }
         } catch (error: any) {
             notify.error(error.response?.data?.message);
         } finally {
@@ -129,6 +154,9 @@ const WorkspaceBoard = () => {
         (event: DragStartEvent) => {
             // Prevent drag operations when board is closed
             if (isBoardClosed) return;
+
+            // const activatorEvent = event.activatorEvent as KeyboardEvent | undefined;
+            // if (activatorEvent?.key === ' ') return; 
 
             setActiveId(event.active.id);
             setIsDragging(true);
@@ -332,13 +360,26 @@ const WorkspaceBoard = () => {
                 );
 
                 if (activeColumnIndex !== -1 && overColumnIndex !== -1) {
-                    return arrayMove(
-                        columns,
-                        activeColumnIndex,
-                        overColumnIndex
-                    );
-                }
+                    const newColumns = arrayMove(columns, activeColumnIndex, overColumnIndex);
+                    const movedIndex = overColumnIndex;
+                    const preCol = newColumns[movedIndex - 1] || null;
+                    const nextCol = newColumns[movedIndex + 1] || null;
 
+                    let newPosition: number;
+                    if (preCol && nextCol) {
+                        newPosition = (preCol.position + nextCol.position) / 2;
+                    } else if (!preCol && nextCol) {
+                        newPosition = nextCol.position - 1000;
+                    } else if (preCol && !nextCol) {
+                        newPosition = preCol.position + 1000;
+                    } else {
+                        newPosition = 1000;
+                    }
+                    
+                    const movedColumn = newColumns[movedIndex];
+                    updateColumnPosititon(Number(boardId), movedColumn.id, Math.floor(newPosition));
+                    return newColumns; 
+                };
                 return columns;
             });
         }
@@ -475,7 +516,7 @@ const WorkspaceBoard = () => {
         try {
             const result = await archiveColumn(columnId);
             notify.success(result.message); 
-            await fetchBoardData();        
+            await fetchBoardData();     
         } catch (error: any) {
             notify.error(error.response?.data?.message);
         }
@@ -496,12 +537,14 @@ const WorkspaceBoard = () => {
 
     const handleReopenBoard = useCallback( async () => {
         setIsLoading(true);
-        await reopenBoard(Number(boardId))
-            .then(data => {
-                notify.success(data.message);
-                setIsLoading(false);
-                setIsBoardClosed(false);
-            });
+        try {
+            const result = await reopenBoard(Number(boardId));
+            notify.success(result.message);
+            await fetchBoardData();
+            setIsLoading(false);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
     }, []);
 
     // OPTIMIZATION: Memoize column props to prevent unnecessary rerenders
@@ -527,7 +570,7 @@ const WorkspaceBoard = () => {
                     </div> : 
                     <>
                         {/* Board Closed Banner */}
-                        {isBoardClosed && (
+                        {boardDetail?.status === 'completed' && (
                             <div className='bg-red-500 text-white px-4 py-3 flex items-center justify-between'>
                                 <div className='flex items-center gap-2'>
                                     <Lock size={18} />
@@ -544,7 +587,7 @@ const WorkspaceBoard = () => {
                                 </button>
                             </div>
                         )}
-                        <BoardNavbar isBoardClosed={isBoardClosed} />
+                        <BoardNavbar id={boardDetail.id} name={boardDetail?.name} isBoardClosed={isBoardClosed} />
 
                         <div className={`grow overflow-hidden ${isBoardClosed ? 'pointer-events-none opacity-60' : ''}`}>
                             <DndContext

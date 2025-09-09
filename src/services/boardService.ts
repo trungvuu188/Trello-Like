@@ -1,4 +1,4 @@
-import type { ApiResponse, Column, UrlPreviewData } from '@/types';
+import type { ApiResponse, Board, Column, UrlPreviewData } from '@/types';
 import axiosClients from './axiosClient';
 
 const previewUrl = '/url-preview';
@@ -12,8 +12,16 @@ const fetchUrlPreview = async (url: string): Promise<UrlPreviewData> => {
     });
 };
 
-const fetchBoardDetail = async (id: number): Promise<ApiResponse<Column[]>> => {
+const fetchBoardDetail = async (id: number): Promise<ApiResponse<Board>> => {
+    return axiosClients.get(`${projectUrl}/${id}`);
+};
+
+const fetchBoardColumns = async (id: number): Promise<ApiResponse<Column[]>> => {
     return axiosClients.get(`${projectUrl}/${id}/columns`);
+};
+
+const fetchArchivedColumns = async (id: number): Promise<ApiResponse<Column[]>> => {
+    return axiosClients.get(`${projectUrl}/${id}/columns/archived`);
 };
 
 const createNewColumn = async (id: number, title: string, position: number): Promise<ApiResponse<null>> => {
@@ -29,6 +37,12 @@ const updateColumn = async (id: number, boardId: number, name: string): Promise<
     });
 };
 
+const updateColumnPosititon = async (boardId: number, columnId: number, position: number): Promise<ApiResponse<null>> => {
+    return axiosClients.patch(`${projectUrl}/${boardId}/columns/${columnId}/position`, {
+        position
+    });
+};
+
 const archiveColumn = async (columnId: number): Promise<ApiResponse<null>> => {
     return axiosClients.patch(`/columns/${columnId}/archive`);
 };
@@ -41,4 +55,9 @@ const deleteColumn = async (columnId: number): Promise<ApiResponse<null>> => {
     return axiosClients.delete(`/columns/${columnId}`);
 };
 
-export { fetchUrlPreview, fetchBoardDetail, createNewColumn, updateColumn, archiveColumn, restoreColumn, deleteColumn };
+export { 
+    fetchUrlPreview, fetchBoardDetail, createNewColumn, 
+    updateColumn, archiveColumn, restoreColumn, 
+    deleteColumn, updateColumnPosititon, fetchBoardColumns, 
+    fetchArchivedColumns 
+};
