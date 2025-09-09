@@ -7,14 +7,21 @@ export interface UrlPreviewData {
     favicon?: string;
 }
 
+export interface Board {
+    id: number;
+    name: string;
+    status: "active" | "completed" | "deleted" | undefined
+}
+
 export interface Item {
-    id: string;
+    id: number;
     content: string;
     urlPreview?: UrlPreviewData;
 }
 
 export interface Column {
-    id: string;
-    title: string;
-    items: Item[];
+    id: number;
+    position: number;
+    name: string;
+    tasks: Item[];
 }

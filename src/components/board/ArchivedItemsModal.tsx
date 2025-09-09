@@ -1,59 +1,33 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, Search, RotateCcw, Trash2, X } from 'lucide-react';
-
-interface ArchivedItem {
-    id: string;
-    title: string;
-    type: 'card' | 'list';
-    archivedAt: Date;
-    columnId?: string; // For cards, which column they came from
-}
+import type { Column, Item } from '@/types';
 
 interface ArchivedItemsModalProps {
     onClose: () => void;
     onBack: () => void;
-    archivedCards: ArchivedItem[];
-    archivedLists: ArchivedItem[];
-    onRestoreCard: (cardId: string) => void;
-    onRestoreList: (listId: string) => void;
-    onDeleteCard: (cardId: string) => void;
-    onDeleteList: (listId: string) => void;
+    archivedTasks: Item[];
+    archivedColumns: Column[];
+    onRestoreTask: (taskId: number) => Promise<void>;
+    onRestoreColumn: (columnId: number) => Promise<void>;
+    onDeleteTask: (taskId: number) => Promise<void>;
+    onDeleteColumn: (columnId: number) => Promise<void>;
 }
 
 const ArchivedItemsModal: React.FC<ArchivedItemsModalProps> = ({
     onClose,
     onBack,
-    archivedCards,
-    archivedLists,
-    onRestoreCard,
-    onRestoreList,
-    onDeleteCard,
-    onDeleteList,
+    archivedTasks,
+    archivedColumns,
+    onDeleteColumn,
+    onDeleteTask,
+    onRestoreColumn,
+    onRestoreTask
 }) => {
-    const [currentView, setCurrentView] = useState<'cards' | 'lists'>('cards');
+    const [currentView, setCurrentView] = useState<'tasks' | 'columns'>('columns');
     const [searchTerm, setSearchTerm] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
 
-    const currentItems = currentView === 'cards' ? archivedCards : archivedLists;
-    const filteredItems = currentItems.filter(item =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const handleRestore = (itemId: string, itemType: 'card' | 'list') => {
-        if (itemType === 'card') {
-            onRestoreCard(itemId);
-        } else {
-            onRestoreList(itemId);
-        }
-    };
-
-    const handleDelete = (itemId: string, itemType: 'card' | 'list') => {
-        if (itemType === 'card') {
-            onDeleteCard(itemId);
-        } else {
-            onDeleteList(itemId);
-        }
-    };
+    const currentItems = currentView === 'tasks' ? archivedTasks : archivedColumns;
 
     return (
         <div
@@ -95,17 +69,17 @@ const ArchivedItemsModal: React.FC<ArchivedItemsModalProps> = ({
                         />
                     </div>
                     <button
-                        onClick={() => setCurrentView(currentView === 'cards' ? 'lists' : 'cards')}
+                        onClick={() => setCurrentView(currentView === 'tasks' ? 'columns' : 'tasks')}
                         className="px-4 py-2 bg-[#394B59] hover:bg-[#4A5760] text-[#B6C2CF] rounded transition-colors whitespace-nowrap"
                     >
-                        Switch to {currentView === 'cards' ? 'lists' : 'cards'}
+                        Switch to {currentView === 'tasks' ? 'columns' : 'tasks'}
                     </button>
                 </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
-                {filteredItems.length === 0 ? (
+                {currentItems.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="text-[#9FADBC] text-lg mb-2">
                             No archived {currentView}
@@ -116,39 +90,76 @@ const ArchivedItemsModal: React.FC<ArchivedItemsModalProps> = ({
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {filteredItems.map((item) => (
-                            <div
-                                key={item.id}
-                                className="bg-[#22272B] border border-[#394B59] rounded-lg p-3 hover:border-[#4A5760] transition-colors"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[#B6C2CF] font-medium mb-1 break-words">
-                                            {item.title}
-                                        </div>
-                                        <div className="text-[#9FADBC] text-xs">
-                                            Archived {item.archivedAt.toLocaleDateString()}
+                        {
+                            currentView === 'columns' ?
+                                archivedColumns.map(item => (
+                                    <div
+                                        key={item.id}
+                                        className="bg-[#22272B] border border-[#394B59] rounded-lg p-3 hover:border-[#4A5760] transition-colors"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[#B6C2CF] font-medium mb-1 break-words">
+                                                    {item.name}
+                                                </div>
+                                                {/* <div className="text-[#9FADBC] text-xs">
+                                                    Archived {item.archivedAt.toLocaleDateString()}
+                                                </div> */}
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <button
+                                                    onClick={() => onRestoreColumn(item.id)}
+                                                    className="p-1.5 text-[#9FADBC] hover:text-[#B6C2CF] hover:bg-[#394B59] rounded transition-colors"
+                                                    title="Restore"
+                                                >
+                                                    <RotateCcw size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => onDeleteColumn(item.id)}
+                                                    className="p-1.5 text-[#9FADBC] hover:text-red-400 hover:bg-[#394B59] rounded transition-colors"
+                                                    title="Delete permanently"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                        <button
-                                            onClick={() => handleRestore(item.id, item.type)}
-                                            className="p-1.5 text-[#9FADBC] hover:text-[#B6C2CF] hover:bg-[#394B59] rounded transition-colors"
-                                            title="Restore"
-                                        >
-                                            <RotateCcw size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item.id, item.type)}
-                                            className="p-1.5 text-[#9FADBC] hover:text-red-400 hover:bg-[#394B59] rounded transition-colors"
-                                            title="Delete permanently"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                ))
+                                :
+                                archivedTasks.map(item => (
+                                    <div
+                                        key={item.id}
+                                        className="bg-[#22272B] border border-[#394B59] rounded-lg p-3 hover:border-[#4A5760] transition-colors"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[#B6C2CF] font-medium mb-1 break-words">
+                                                        {item.content}
+                                                </div>
+                                                {/* <div className="text-[#9FADBC] text-xs">
+                                                    Archived {item.archivedAt.toLocaleDateString()}
+                                                </div> */}
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <button
+                                                    onClick={() => onRestoreTask(item.id)}
+                                                    className="p-1.5 text-[#9FADBC] hover:text-[#B6C2CF] hover:bg-[#394B59] rounded transition-colors"
+                                                    title="Restore"
+                                                >
+                                                    <RotateCcw size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => onDeleteTask(item.id)}
+                                                    className="p-1.5 text-[#9FADBC] hover:text-red-400 hover:bg-[#394B59] rounded transition-colors"
+                                                    title="Delete permanently"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
+                                ))
+                        }
                     </div>
                 )}
             </div>

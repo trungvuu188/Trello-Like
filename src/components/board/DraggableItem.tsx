@@ -7,7 +7,7 @@ import UrlPreview from './UrlPreview';
 
 interface DraggableItemProps {
     item: Item;
-    onDelete: (itemId: string) => void;
+    onDelete: (itemId: number) => void;
     handleShowDetailTask: () => void;
     label?: string; // e.g., "FE", "BE"
     assignedMember?: {

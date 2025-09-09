@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { X, Calendar, Users, Paperclip, List, Edit3, Archive, Eye, Copy, Trash2, MessageSquareText } from 'lucide-react';
+import { X, Calendar, Users,  
+  List, Edit3, Archive, 
+  // Eye, Paperclip, Copy, Trash2, MessageSquareText 
+} from 'lucide-react';
 import LoadingContent from '../ui/LoadingContent';
 
 interface TaskModalProps {
@@ -17,26 +20,26 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
   onClose, 
   item, 
   onUpdate, 
-  onDelete 
+  // onDelete 
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(item.content);
   const [description, setDescription] = useState("As a workgroup member, I want to create, assign, update, and delete tasks inside a project, so that we can manage our work effectively in a collaborative environment.");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [comment, setComment] = useState('');
+  // const [comment, setComment] = useState('');
 
   const handleSaveTitle = () => {
     setIsEditingTitle(false);
     onUpdate?.(item.id, { content: title });
   };
 
-  const handleDeleteTask = () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      onDelete?.(item.id);
-      onClose();
-    }
-  };
+  // const handleDeleteTask = () => {
+  //   if (window.confirm('Are you sure you want to delete this task?')) {
+  //     onDelete?.(item.id);
+  //     onClose();
+  //   }
+  // };
 
   useEffect(() => {
     setIsLoading(true);
@@ -101,10 +104,6 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
                   <button className="flex items-center gap-2 px-3 py-2 bg-gray-600 bg-opacity-50 hover:bg-opacity-70 text-white text-sm rounded">
                     <Users size={14} />
                     Members
-                  </button>
-                  <button className="flex items-center gap-2 px-3 py-2 bg-gray-600 bg-opacity-50 hover:bg-opacity-70 text-white text-sm rounded">
-                    <Paperclip size={14} />
-                    Attachment
                   </button>
                 </div>
               </div>
@@ -171,15 +170,15 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
 
               {/* Activity Section */}
               <div className="px-6 pb-6">
-                <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                {/* <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
                   <MessageSquareText />
                   Comments
-                </h3>
+                </h3> */}
                 
                 {/* Comment Input */}
-                <div className="flex gap-3 mb-4">
+                {/* <div className="flex gap-3 mb-4">
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                    HL
+                    A
                   </div>
                   <div className="flex-1">
                     <textarea
@@ -200,16 +199,16 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Activity Item */}
-                <div className="flex gap-3 text-sm">
+                {/* <div className="flex gap-3 text-sm">
                   <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                    HL
+                    A
                   </div>
                   <div className="flex-1">
                     <div className="text-gray-300">
-                      <span className="font-medium text-white">Hiền Lương</span> copied this card from{' '}
+                      <span className="font-medium text-white">ABC</span> copied this card from{' '}
                       <span className="text-blue-400 underline cursor-pointer hover:text-blue-300">
                         Create, assign, update, and delete tasks
                       </span>{' '}
@@ -217,7 +216,7 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
                     </div>
                     <div className="text-xs text-gray-500 mt-1">Jul 24, 2023, 3:19 PM</div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -246,10 +245,6 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
                       <Calendar size={14} />
                       Dates
                     </button>
-                    <button className="w-full text-left px-2 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 rounded flex items-center gap-2">
-                      <Paperclip size={14} />
-                      Attachment
-                    </button>
                   </div>
                 </div>
 
@@ -260,23 +255,8 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
                   </h4>
                   <div className="space-y-1">
                     <button className="w-full text-left px-2 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 rounded flex items-center gap-2">
-                      <Eye size={14} />
-                      Watch
-                    </button>
-                    <button className="w-full text-left px-2 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 rounded flex items-center gap-2">
                       <Archive size={14} />
                       Archive
-                    </button>
-                    <button className="w-full text-left px-2 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:bg-opacity-50 rounded flex items-center gap-2">
-                      <Copy size={14} />
-                      Copy
-                    </button>
-                    <button 
-                      onClick={handleDeleteTask}
-                      className="w-full text-left px-2 py-2 text-sm text-red-400 hover:bg-red-900 hover:bg-opacity-30 rounded flex items-center gap-2"
-                    >
-                      <Trash2 size={14} />
-                      Delete
                     </button>
                   </div>
                 </div>

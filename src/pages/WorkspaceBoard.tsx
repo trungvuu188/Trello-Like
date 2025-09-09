@@ -2,10 +2,14 @@ import BoardNavbar from '@/components/board/BoardNavbar';
 import DroppableColumn from '@/components/board/DroppableColumn';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
 import LoadingContent from '@/components/ui/LoadingContent';
-import type { Column, Item } from '@/types';
+import { archiveColumn, createNewColumn, fetchBoardColumns, fetchBoardDetail, updateColumn, updateColumnPosititon } from '@/services/boardService';
+import { notify } from '@/services/toastService';
+import { reopenBoard } from '@/services/workspaceService';
+import type { Board, Column } from '@/types';
 import {
     DndContext,
     DragOverlay,
+    KeyboardCode,
     KeyboardSensor,
     PointerSensor,
     pointerWithin,
@@ -22,54 +26,34 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import { GripVertical, Plus } from 'lucide-react';
+import { GripVertical, Plus, Lock, Unlock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-const mockColumns = [
-    {
-        id: 'col-1',
-        title: 'Backlog',
-        items: [
-            { id: 'item-1', content: 'Design the new landing page' },
-            { id: 'item-2', content: 'Set up database schema' },
-            { id: 'item-3', content: 'Write API auth' },
-        ],
-    },
-    {
-        id: 'col-2',
-        title: 'To do',
-        items: [
-            { id: 'item-4', content: 'Security config' },
-            { id: 'item-5', content: 'Responsive for layout' },
-        ],
-    },
-    {
-        id: 'col-3',
-        title: 'Process',
-        items: [
-            { id: 'item-6', content: 'Unit testing' },
-            { id: 'item-7', content: 'CI/CD with Github Action' },
-        ],
-    },
-]
+import { useParams } from 'react-router-dom';
 
 const WorkspaceBoard = () => {
-    const [columns, setColumns] = useState<Column[]>([]);
 
+    const { boardId } = useParams();
+    const [isBoardClosed, setIsBoardClosed] = useState(false);
+    const [boardDetail, setBoardDetail] = useState<Board>({ id: 0, name: '', status: undefined });
+    const [columns, setColumns] = useState<Column[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-    const [activeInputColumnId, setActiveInputColumnId] = useState<string | null>(null);
+    const [activeInputColumnId, setActiveInputColumnId] = useState<number | null>(null);
     const [cardTitle, setCardTitle] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        setIsLoading(true);
-        setTimeout(() => {
-            setColumns(mockColumns);
-            setIsLoading(false);
-        }, 3000)
-    }, []);
+    const ws = new WebSocket("http://localhost:9000/ws");
+
+    ws.onopen = () => {
+        console.log("Connected to WS");
+        ws.send(JSON.stringify({ type: "ping" }));
+    };
+
+    ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        console.log("Received:", msg);
+    };
 
     // OPTIMIZATION: Track dragging state separately from active elements
     const [isDragging, setIsDragging] = useState(false);
@@ -98,6 +82,13 @@ const WorkspaceBoard = () => {
         }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
+        }),
+        useSensor(KeyboardSensor, {
+            keyboardCodes: {
+            start: [KeyboardCode.Enter],
+            cancel: [KeyboardCode.Esc],
+            end: [KeyboardCode.Enter],
+            },
         })
     );
 
@@ -112,11 +103,32 @@ const WorkspaceBoard = () => {
         const activeItem = activeColumn
             ? null
             : columns
-                .flatMap(col => col.items)
+                .flatMap(col => col.tasks)
                 .find(item => item.id === activeId);
 
         return { activeColumn, activeItem };
     }, [activeId, columns]);
+
+    const fetchBoardData = async () => {
+        setIsLoading(true);
+        try {
+            const boardData = await fetchBoardDetail(Number(boardId));
+            setBoardDetail(boardData.data);
+            setIsBoardClosed(boardData.data?.status === 'completed');
+            if (boardData.data?.status === 'active') {
+                const columnsData = await fetchBoardColumns(Number(boardId));
+                setColumns(columnsData.data);
+            }
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchBoardData();
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -129,17 +141,23 @@ const WorkspaceBoard = () => {
             }
         };
 
-        if (activeInputColumnId) {
+        if (activeInputColumnId && !isBoardClosed) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [activeInputColumnId]);
+    }, [activeInputColumnId, isBoardClosed]);
 
     const handleDragStart = useCallback(
         (event: DragStartEvent) => {
+            // Prevent drag operations when board is closed
+            if (isBoardClosed) return;
+
+            // const activatorEvent = event.activatorEvent as KeyboardEvent | undefined;
+            // if (activatorEvent?.key === ' ') return; 
+
             setActiveId(event.active.id);
             setIsDragging(true);
 
@@ -158,7 +176,7 @@ const WorkspaceBoard = () => {
             setActiveInputColumnId(null);
             setCardTitle('');
         },
-        [columns]
+        [columns, isBoardClosed]
     );
 
     // OPTIMIZATION: Heavily optimized drag over with batching and debouncing
@@ -166,7 +184,7 @@ const WorkspaceBoard = () => {
         (event: DragOverEvent) => {
             const { active, over } = event;
 
-            if (!over || !isDragging) return;
+            if (!over || !isDragging || isBoardClosed) return;
 
             const activeId = active.id;
             const overId = over.id;
@@ -200,10 +218,10 @@ const WorkspaceBoard = () => {
                 // Item over item (different column)
                 if (isActiveAnItem && isOverAnItem) {
                     const activeColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === activeId)
+                        col.tasks.find(item => item.id === activeId)
                     );
                     const overColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === overId)
+                        col.tasks.find(item => item.id === overId)
                     );
 
                     if (
@@ -216,22 +234,22 @@ const WorkspaceBoard = () => {
                         };
                         const overColumn = { ...newColumns[overColumnIndex] };
 
-                        const activeItemIndex = activeColumn.items.findIndex(
+                        const activeItemIndex = activeColumn.tasks.findIndex(
                             item => item.id === activeId
                         );
-                        const overItemIndex = overColumn.items.findIndex(
+                        const overItemIndex = overColumn.tasks.findIndex(
                             item => item.id === overId
                         );
 
                         if (activeItemIndex !== -1 && overItemIndex !== -1) {
-                            activeColumn.items = [...activeColumn.items];
-                            overColumn.items = [...overColumn.items];
+                            activeColumn.tasks = [...activeColumn.tasks];
+                            overColumn.tasks = [...overColumn.tasks];
 
-                            const [activeItem] = activeColumn.items.splice(
+                            const [activeItem] = activeColumn.tasks.splice(
                                 activeItemIndex,
                                 1
                             );
-                            overColumn.items.splice(
+                            overColumn.tasks.splice(
                                 overItemIndex,
                                 0,
                                 activeItem
@@ -247,7 +265,7 @@ const WorkspaceBoard = () => {
                 // Item over column
                 if (isActiveAnItem && isOverAColumn) {
                     const activeColumnIndex = newColumns.findIndex(col =>
-                        col.items.find(item => item.id === activeId)
+                        col.tasks.find(item => item.id === activeId)
                     );
                     const overColumnIndex = newColumns.findIndex(
                         col => col.id === overId
@@ -263,19 +281,19 @@ const WorkspaceBoard = () => {
                         };
                         const overColumn = { ...newColumns[overColumnIndex] };
 
-                        const activeItemIndex = activeColumn.items.findIndex(
+                        const activeItemIndex = activeColumn.tasks.findIndex(
                             item => item.id === activeId
                         );
 
                         if (activeItemIndex !== -1) {
-                            activeColumn.items = [...activeColumn.items];
-                            overColumn.items = [...overColumn.items];
+                            activeColumn.tasks = [...activeColumn.tasks];
+                            overColumn.tasks = [...overColumn.tasks];
 
-                            const [activeItem] = activeColumn.items.splice(
+                            const [activeItem] = activeColumn.tasks.splice(
                                 activeItemIndex,
                                 1
                             );
-                            overColumn.items.push(activeItem);
+                            overColumn.tasks.push(activeItem);
 
                             newColumns[activeColumnIndex] = activeColumn;
                             newColumns[overColumnIndex] = overColumn;
@@ -294,7 +312,7 @@ const WorkspaceBoard = () => {
                 }
             }, 16); // OPTIMIZATION: 16ms delay = ~60fps batching
         },
-        [isDragging]
+        [isDragging, isBoardClosed]
     );
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -310,6 +328,12 @@ const WorkspaceBoard = () => {
         setIsDragging(false);
         setDragType(null);
         lastDragOperationRef.current = '';
+
+        // If board is closed, restore original state and return
+        if (isBoardClosed) {
+            setColumns(dragStateRef.current.originalColumns);
+            return;
+        }
 
         if (!over) {
             // Restore original state if cancelled
@@ -336,13 +360,26 @@ const WorkspaceBoard = () => {
                 );
 
                 if (activeColumnIndex !== -1 && overColumnIndex !== -1) {
-                    return arrayMove(
-                        columns,
-                        activeColumnIndex,
-                        overColumnIndex
-                    );
-                }
+                    const newColumns = arrayMove(columns, activeColumnIndex, overColumnIndex);
+                    const movedIndex = overColumnIndex;
+                    const preCol = newColumns[movedIndex - 1] || null;
+                    const nextCol = newColumns[movedIndex + 1] || null;
 
+                    let newPosition: number;
+                    if (preCol && nextCol) {
+                        newPosition = (preCol.position + nextCol.position) / 2;
+                    } else if (!preCol && nextCol) {
+                        newPosition = nextCol.position - 1000;
+                    } else if (preCol && !nextCol) {
+                        newPosition = preCol.position + 1000;
+                    } else {
+                        newPosition = 1000;
+                    }
+                    
+                    const movedColumn = newColumns[movedIndex];
+                    updateColumnPosititon(Number(boardId), movedColumn.id, Math.floor(newPosition));
+                    return newColumns; 
+                };
                 return columns;
             });
         }
@@ -351,10 +388,10 @@ const WorkspaceBoard = () => {
         if (isActiveAnItem && isOverAnItem) {
             setColumns(prevColumns => {
                 const activeColumnIndex = prevColumns.findIndex(col =>
-                    col.items.find(item => item.id === activeId)
+                    col.tasks.find(item => item.id === activeId)
                 );
                 const overColumnIndex = prevColumns.findIndex(col =>
-                    col.items.find(item => item.id === overId)
+                    col.tasks.find(item => item.id === overId)
                 );
 
                 if (
@@ -364,16 +401,16 @@ const WorkspaceBoard = () => {
                     const newColumns = [...prevColumns];
                     const column = { ...newColumns[activeColumnIndex] };
 
-                    const activeItemIndex = column.items.findIndex(
+                    const activeItemIndex = column.tasks.findIndex(
                         item => item.id === activeId
                     );
-                    const overItemIndex = column.items.findIndex(
+                    const overItemIndex = column.tasks.findIndex(
                         item => item.id === overId
                     );
 
                     if (activeItemIndex !== -1 && overItemIndex !== -1) {
-                        column.items = arrayMove(
-                            column.items,
+                        column.tasks = arrayMove(
+                            column.tasks,
                             activeItemIndex,
                             overItemIndex
                         );
@@ -385,32 +422,37 @@ const WorkspaceBoard = () => {
                 return prevColumns;
             });
         }
-    }, []);
+    }, [isBoardClosed]);
 
-    const addColumn = useCallback(() => {
-        const newColumn: Column = {
-            id: `col-${Date.now()}`,
-            title: `New Column`,
-            items: [],
-        };
-        setColumns(pre => [...pre, newColumn]);
-    }, []);
+    const addColumn = useCallback( async () => {
+        if (isBoardClosed) return;
 
-    const handleUpdateColumnTitle = useCallback(
-        (columnId: string, newTitle: string) => {
-            setColumns(columns =>
-                columns.map(column =>
-                    column.id === columnId
-                        ? { ...column, title: newTitle }
-                        : column
-                )
-            );
-        },
-        []
-    );
+        const lastColumn = columns[columns.length - 1];
+        const newPosition = lastColumn ? lastColumn.position + 1000 : 1000;
+        
+        try {
+            const result = await createNewColumn(Number(boardId), 'New Column', newPosition)
+            notify.success(result.message);
+            await fetchBoardData();
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
+    }, [isBoardClosed, columns, boardId]);
+
+    const handleUpdateColumnTitle = useCallback( async (columnId: number, newTitle: string) => {
+        if (isBoardClosed) return;
+        await updateColumn(Number(boardId), columnId, newTitle)
+            .then(data => {
+                console.log(isBoardClosed, activeElements.activeColumn);
+                notify.success(data.message)
+            })
+            .catch(err => notify.success(err.response?.data?.message))           
+    }, [isBoardClosed]);
 
     const deleteColumn = useCallback(
-        (columnId: string) => {
+        (columnId: number) => {
+            if (isBoardClosed) return;
+
             setColumns(columns =>
                 columns.filter(column => column.id !== columnId)
             );
@@ -419,34 +461,39 @@ const WorkspaceBoard = () => {
                 setCardTitle('');
             }
         },
-        [activeInputColumnId]
+        [activeInputColumnId, isBoardClosed]
     );
 
-    const handleStartAddingCard = useCallback((columnId: string) => {
+    const handleStartAddingCard = useCallback((columnId: number) => {
+        if (isBoardClosed) return;
+
         setActiveInputColumnId(columnId);
         setCardTitle('');
-    }, []);
+    }, [isBoardClosed]);
 
     const handleSubmitCard = useCallback(
-        async (columnId: string) => {
+        async (columnId: number) => {
+            console.log(columnId);
+            if (isBoardClosed) return;
+
             setActiveInputColumnId(null);
             setCardTitle('');
-            if (cardTitle.trim()) {
-                const newItem: Item = {
-                    id: `item-${Date.now()}`,
-                    content: cardTitle.trim(),
-                };
+            // if (cardTitle.trim()) {
+            //     const newItem: Item = {
+            //         id: `item-${Date.now()}`,
+            //         content: cardTitle.trim(),
+            //     };
 
-                setColumns(columns =>
-                    columns.map(column =>
-                        column.id === columnId
-                            ? { ...column, items: [...column.items, newItem] }
-                            : column
-                    )
-                );
-            }
+            //     setColumns(columns =>
+            //         columns.map(column =>
+            //             column.id === columnId
+            //                 ? { ...column, items: [...column.items, newItem] }
+            //                 : column
+            //         )
+            //     );
+            // }
         },
-        [cardTitle]
+        [cardTitle, isBoardClosed]
     );
 
     const handleCancelCard = useCallback(() => {
@@ -454,22 +501,32 @@ const WorkspaceBoard = () => {
         setCardTitle('');
     }, []);
 
-    const deleteItem = useCallback((itemId: string) => {
+    const deleteItem = useCallback((itemId: number) => {
+        if (isBoardClosed) return;
+
         setColumns(columns =>
             columns.map(column => ({
                 ...column,
-                items: column.items.filter(item => item.id !== itemId),
+                items: column.tasks.filter(item => item.id !== itemId),
             }))
         );
-    }, []);
+    }, [isBoardClosed]);
 
-    const handleArchiveColumn = useCallback((columnId: string) => {
-        console.log("archived column", columnId);
-    }, []);
+    const handleArchiveColumn = useCallback( async (columnId: number) => {
+        if (isBoardClosed) return;
+        try {
+            const result = await archiveColumn(columnId);
+            notify.success(result.message); 
+            await fetchBoardData();     
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
+    }, [isBoardClosed]);
 
-    const handleArchiveAllItemInColumns = useCallback((columnId: string) => {
+    const handleArchiveAllItemInColumns = useCallback((columnId: number) => {
+        if (isBoardClosed) return;
         console.log("archived all items", columnId);
-    }, []);
+    }, [isBoardClosed]);
 
     const handleHideDetailModal = useCallback(() => {
         setShowDetailModal(false);
@@ -479,105 +536,140 @@ const WorkspaceBoard = () => {
         setShowDetailModal(true);
     }, []);
 
+    const handleReopenBoard = useCallback( async () => {
+        setIsLoading(true);
+        try {
+            const result = await reopenBoard(Number(boardId));
+            notify.success(result.message);
+            await fetchBoardData();
+            setIsLoading(false);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
+    }, []);
+
     // OPTIMIZATION: Memoize column props to prevent unnecessary rerenders
     const columnProps = useMemo(
         () =>
             columns.map(col => ({
                 key: col.id,
                 column: col,
-                items: col.items,
+                items: col.tasks,
                 isAddingCard: activeInputColumnId === col.id,
                 isDragging: isDragging && dragType === 'item',
+                isBoardClosed: isBoardClosed,
             })),
-        [columns, activeInputColumnId, isDragging, dragType]
+        [columns, activeInputColumnId, isDragging, dragType, isBoardClosed]
     );
 
     return (
         <div className='bg-[#283449] w-full h-full flex flex-col'>
             {
-                isLoading ? 
-                <LoadingContent /> : 
-                <>
-                    <BoardNavbar />
-                    <div className='grow overflow-hidden'>
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={pointerWithin}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
-                                <SortableContext
-                                    items={columnIds}
-                                    strategy={horizontalListSortingStrategy}
-                                >
-                                    {columnProps.map(col => (
-                                        <DroppableColumn
-                                            key={col.key}
-                                            column={col.column}
-                                            items={col.items}
-                                            isAddingCard={col.isAddingCard}
-                                            cardTitle={cardTitle}
-                                            setCardTitle={setCardTitle}
-                                            onStartAddingCard={handleStartAddingCard}
-                                            onSubmitCard={handleSubmitCard}
-                                            onCancelCard={handleCancelCard}
-                                            onDeleteItem={deleteItem}
-                                            onDeleteColumn={deleteColumn}
-                                            onUpdateColumnTitle={handleUpdateColumnTitle}
-                                            onArchiveColumn={handleArchiveColumn}
-                                            onArchiveAllItems={handleArchiveAllItemInColumns}
-                                            handleShowDetailTask={handleShowDetailModal}
-                                        />
-                                    ))}
-                                </SortableContext>
-        
+                isLoading ?
+                    <div className="mt-6">
+                        <LoadingContent />
+                    </div> : 
+                    <>
+                        {/* Board Closed Banner */}
+                        {boardDetail?.status === 'completed' && (
+                            <div className='bg-red-500 text-white px-4 py-3 flex items-center justify-between'>
+                                <div className='flex items-center gap-2'>
+                                    <Lock size={18} />
+                                    <span className='font-medium'>
+                                        This board is closed. Reopen the board to make changes.
+                                    </span>
+                                </div>
                                 <button
-                                    onClick={addColumn}
-                                    className='bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white'
+                                    onClick={handleReopenBoard}
+                                    className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors font-medium'
                                 >
-                                    <Plus size={20} />
-                                    Add another column
+                                    <Unlock size={16} />
+                                    Reopen board
                                 </button>
                             </div>
-                            <DragOverlay>
-                                {activeElements.activeColumn ? (
-                                    <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
-                                        <div className='flex items-center gap-2 mb-4'>
-                                            <GripVertical
-                                                size={16}
-                                                className='text-gray-400'
+                        )}
+                        <BoardNavbar id={boardDetail.id} name={boardDetail?.name} isBoardClosed={isBoardClosed} />
+
+                        <div className={`grow overflow-hidden ${isBoardClosed ? 'pointer-events-none opacity-60' : ''}`}>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={pointerWithin}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className='h-full flex items-start overflow-x-auto gap-4 p-4'>
+                                    <SortableContext
+                                        items={columnIds}
+                                        strategy={horizontalListSortingStrategy}
+                                    >
+                                        {columnProps.map(col => (
+                                            <DroppableColumn
+                                                key={col.key}
+                                                column={col.column}
+                                                items={col.items}
+                                                isAddingCard={col.isAddingCard}
+                                                cardTitle={cardTitle}
+                                                setCardTitle={setCardTitle}
+                                                onStartAddingCard={handleStartAddingCard}
+                                                onSubmitCard={handleSubmitCard}
+                                                onCancelCard={handleCancelCard}
+                                                onDeleteItem={deleteItem}
+                                                onDeleteColumn={deleteColumn}
+                                                onUpdateColumnTitle={handleUpdateColumnTitle}
+                                                onArchiveColumn={handleArchiveColumn}
+                                                onArchiveAllItems={handleArchiveAllItemInColumns}
+                                                handleShowDetailTask={handleShowDetailModal}
                                             />
-                                            <h3 className='font-semibold text-white'>
-                                                {activeElements.activeColumn.title}
-                                            </h3>
-                                            <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
-                                                {
-                                                    activeElements.activeColumn.items
-                                                        .length
-                                                }
+                                        ))}
+                                    </SortableContext>
+
+                                    <button
+                                        onClick={addColumn}
+                                        className={`bg-[#ffffff3d] hover:bg-[#ffffff33] rounded-lg p-4 w-80 flex-shrink-0 transition-colors flex items-center justify-center gap-2 text-white ${isBoardClosed ? 'cursor-not-allowed' : ''}`}
+                                        disabled={isBoardClosed}
+                                    >
+                                        <Plus size={20} />
+                                        Add another column
+                                    </button>
+                                </div>
+                                <DragOverlay>
+                                    {!isBoardClosed && activeElements.activeColumn ? (
+                                        <div className='bg-[rgba(0,0,0,0.7)] rounded-lg p-4 w-80 opacity-95 transform rotate-2 shadow-2xl'>
+                                            <div className='flex items-center gap-2 mb-4'>
+                                                <GripVertical
+                                                    size={16}
+                                                    className='text-gray-400'
+                                                />
+                                                <h3 className='font-semibold text-white'>
+                                                    {activeElements.activeColumn.name}
+                                                </h3>
+                                                <span className='bg-gray-300 text-gray-600 text-xs px-2 py-1 rounded-full'>
+                                                    {
+                                                        activeElements.activeColumn.tasks
+                                                            .length
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : !isBoardClosed && activeElements.activeItem ? (
+                                        <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
+                                            <span className='text-sm text-white whitespace-pre-wrap break-words'>
+                                                {activeElements.activeItem.content}
                                             </span>
                                         </div>
-                                    </div>
-                                ) : activeElements.activeItem ? (
-                                    <div className='bg-[rgba(0,0,0,0.6)] p-3 rounded-lg shadow-2xl opacity-95 transform rotate-2'>
-                                        <span className='text-sm text-white whitespace-pre-wrap break-words'>
-                                            {activeElements.activeItem.content}
-                                        </span>
-                                    </div>
-                                ) : null}
-                            </DragOverlay>
-                        </DndContext>
-                    </div>
-                    {
-                        showDetailModal && 
-                        <TaskDetailModal
-                            onClose={handleHideDetailModal}
-                            item={{ id: '1', content: 'Hello' }}
-                        />
-                    }
-                </>
+                                    ) : null}
+                                </DragOverlay>
+                            </DndContext>
+                        </div>
+                        {
+                            showDetailModal &&
+                            <TaskDetailModal
+                                onClose={handleHideDetailModal}
+                                item={{ id: '1', content: 'Hello' }}
+                            />
+                        }
+                    </>
             }
         </div>
     );

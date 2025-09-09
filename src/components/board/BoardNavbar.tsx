@@ -1,9 +1,12 @@
 import { completedBoard } from '@/services/workspaceService';
 // import { Activity, Copy, EarthIcon, Eye, Folder, Globe, Image, Menu, Settings, Tag, Users, X } from 'lucide-react';
 import { Folder, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ArchivedItemsModal from './ArchivedItemsModal';
+import type { Column } from '@/types';
+import { deleteColumn, fetchArchivedColumns, restoreColumn } from '@/services/boardService';
+import { notify } from '@/services/toastService';
 
 // const menuItems = [
 //     { icon: <Users />, label: "Share", color: "text-gray-300" },
@@ -22,42 +25,40 @@ import ArchivedItemsModal from './ArchivedItemsModal';
 //     { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
 // ];
 
-// Mock data - replace with your actual data
-const mockArchivedCards = [
-    {
-        id: '1',
-        title: 'Completed task example',
-        type: 'card' as const,
-        archivedAt: new Date('2024-01-15'),
-        columnId: 'col1'
-    },
-    {
-        id: '2', 
-        title: 'Another archived card',
-        type: 'card' as const,
-        archivedAt: new Date('2024-01-14'),
-        columnId: 'col2'
-    }
-];
+interface BoardNavbarProps {
+    id: number;
+    name?: string;
+    isBoardClosed: boolean;
+}
 
-const mockArchivedLists = [
-    {
-        id: 'list1',
-        title: 'Old Sprint Column',
-        type: 'list' as const,
-        archivedAt: new Date('2024-01-10'),
-    }
-];
-
-const BoardNavbar = () => {
+const BoardNavbar: React.FC<BoardNavbarProps> = ({
+    id,
+    name,
+    isBoardClosed
+}) => {
 
     const { wsId, boardId } = useParams();
-    
     const navigate = useNavigate();
+    const [archivedColumns, setArchivedColumns] = useState<Column[]>([]);
+    // const [archivedTasks, setArchivedTasks] = useState<Item[]>([]);
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
     const [showArchivedItems, setShowArchivedItems] = useState(false);
+
+    const fetchArchivedItems = async () => {
+        if(id === 0) return;
+        try {
+            const result = await fetchArchivedColumns(id);
+            result.data && setArchivedColumns(result.data);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
+    }
+
+    useEffect(() => {
+        fetchArchivedItems();
+    }, [fetchArchivedColumns]);
 
     const handleCloseMenu = () => {
         setShowCloseConfirm(false);
@@ -86,30 +87,38 @@ const BoardNavbar = () => {
     };
 
     // Archive handlers - implement these based on your data management
-    const handleRestoreCard = (cardId: string) => {
-        console.log('Restoring card:', cardId);
-        // Implement your restore card logic here
+    const handleRestoreTask = async (taskId: number) => {
+        console.log(taskId);
     };
 
-    const handleRestoreList = (listId: string) => {
-        console.log('Restoring list:', listId);
-        // Implement your restore list logic here
+    const handleRestoreColumn = async (columnId: number) => {
+        try {
+            const result = await restoreColumn(columnId);
+            setArchivedColumns(archivedColumns.filter(item => item.id !== columnId));
+            notify.success(result.message);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
     };
 
-    const handleDeleteCard = (cardId: string) => {
-        console.log('Permanently deleting card:', cardId);
-        // Implement your permanent delete card logic here
+    const handleDeleteTask = async (taskId: number) => {
+        console.log(taskId);
     };
 
-    const handleDeleteList = (listId: string) => {
-        console.log('Permanently deleting list:', listId);
-        // Implement your permanent delete list logic here
+    const handleDeleteColumn = async (columnId: number) => {
+        try {
+            const result = await deleteColumn(columnId);
+            setArchivedColumns(archivedColumns.filter(item => item.id !== columnId));
+            notify.success(result.message);
+        } catch (error: any) {
+            notify.error(error.response?.data?.message);
+        }
     };
 
     return (
-        <div className='h-[50px] flex items-center justify-between bg-[#28303E] p-4'>
+        <div className={`${isBoardClosed ? 'pointer-events-none opacity-60' : ''} h-[50px] flex items-center justify-between bg-[#28303E] p-4`}>
             <h1 className='text-xl font-bold text-white mb-2'>
-                Smart TaskHub
+                {name}
             </h1>
             {/* Folder Menu Button */}
             <div className="relative flex items-center gap-2">
@@ -253,12 +262,12 @@ const BoardNavbar = () => {
                                 <ArchivedItemsModal
                                     onClose={handleCloseMenu}
                                     onBack={handleBackToMenu}
-                                    archivedCards={mockArchivedCards}
-                                    archivedLists={mockArchivedLists}
-                                    onRestoreCard={handleRestoreCard}
-                                    onRestoreList={handleRestoreList}
-                                    onDeleteCard={handleDeleteCard}
-                                    onDeleteList={handleDeleteList}
+                                    archivedTasks={[]}
+                                    archivedColumns={archivedColumns}
+                                    onRestoreTask={handleRestoreTask}
+                                    onRestoreColumn={handleRestoreColumn}
+                                    onDeleteTask={handleDeleteTask}
+                                    onDeleteColumn={handleDeleteColumn}
                                 />
                             </>
                         }
