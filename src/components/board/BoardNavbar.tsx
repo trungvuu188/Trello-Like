@@ -4,7 +4,7 @@ import { Folder, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ArchivedItemsModal from './ArchivedItemsModal';
-import type { Column, Item } from '@/types';
+import type { Column } from '@/types';
 import { deleteColumn, fetchArchivedColumns, restoreColumn } from '@/services/boardService';
 import { notify } from '@/services/toastService';
 
@@ -25,33 +25,6 @@ import { notify } from '@/services/toastService';
 //     { icon: <Copy />, label: "Copy board", color: "text-gray-300"},
 // ];
 
-// Mock data - replace with your actual data
-const mockArchivedCards = [
-    {
-        id: '1',
-        title: 'Completed task example',
-        type: 'card' as const,
-        archivedAt: new Date('2024-01-15'),
-        columnId: 'col1'
-    },
-    {
-        id: '2', 
-        title: 'Another archived card',
-        type: 'card' as const,
-        archivedAt: new Date('2024-01-14'),
-        columnId: 'col2'
-    }
-];
-
-const mockArchivedLists = [
-    {
-        id: 'list1',
-        title: 'Old Sprint Column',
-        type: 'list' as const,
-        archivedAt: new Date('2024-01-10'),
-    }
-];
-
 interface BoardNavbarProps {
     id: number;
     name?: string;
@@ -67,7 +40,7 @@ const BoardNavbar: React.FC<BoardNavbarProps> = ({
     const { wsId, boardId } = useParams();
     const navigate = useNavigate();
     const [archivedColumns, setArchivedColumns] = useState<Column[]>([]);
-    const [archivedTasks, setArchivedTasks] = useState<Item[]>([]);
+    // const [archivedTasks, setArchivedTasks] = useState<Item[]>([]);
     const [showMenu, setShowMenu] = useState(false);
     const [showVisibility, setShowVisibility] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -115,6 +88,7 @@ const BoardNavbar: React.FC<BoardNavbarProps> = ({
 
     // Archive handlers - implement these based on your data management
     const handleRestoreTask = async (taskId: number) => {
+        console.log(taskId);
     };
 
     const handleRestoreColumn = async (columnId: number) => {
@@ -128,6 +102,7 @@ const BoardNavbar: React.FC<BoardNavbarProps> = ({
     };
 
     const handleDeleteTask = async (taskId: number) => {
+        console.log(taskId);
     };
 
     const handleDeleteColumn = async (columnId: number) => {

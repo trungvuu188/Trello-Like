@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { X, Calendar, Users, Paperclip, List, Edit3, Archive, Eye, Copy, Trash2, MessageSquareText } from 'lucide-react';
+import { X, Calendar, Users,  
+  List, Edit3, Archive, 
+  // Eye, Paperclip, Copy, Trash2, MessageSquareText 
+} from 'lucide-react';
 import LoadingContent from '../ui/LoadingContent';
 
 interface TaskModalProps {
@@ -17,26 +20,26 @@ const TaskDetailModal: React.FC<TaskModalProps> = ({
   onClose, 
   item, 
   onUpdate, 
-  onDelete 
+  // onDelete 
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(item.content);
   const [description, setDescription] = useState("As a workgroup member, I want to create, assign, update, and delete tasks inside a project, so that we can manage our work effectively in a collaborative environment.");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [comment, setComment] = useState('');
+  // const [comment, setComment] = useState('');
 
   const handleSaveTitle = () => {
     setIsEditingTitle(false);
     onUpdate?.(item.id, { content: title });
   };
 
-  const handleDeleteTask = () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      onDelete?.(item.id);
-      onClose();
-    }
-  };
+  // const handleDeleteTask = () => {
+  //   if (window.confirm('Are you sure you want to delete this task?')) {
+  //     onDelete?.(item.id);
+  //     onClose();
+  //   }
+  // };
 
   useEffect(() => {
     setIsLoading(true);

@@ -473,6 +473,7 @@ const WorkspaceBoard = () => {
 
     const handleSubmitCard = useCallback(
         async (columnId: number) => {
+            console.log(columnId);
             if (isBoardClosed) return;
 
             setActiveInputColumnId(null);
